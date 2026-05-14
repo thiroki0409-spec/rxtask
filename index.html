@@ -205,6 +205,7 @@
 <div class="header" id="hdr" style="display:none">
   <div class="logo">Rx<span>Task</span></div>
   <div class="header-right">
+    <div id="syncDot" title="同期状態" style="width:10px;height:10px;border-radius:50%;background:#94a3b8;flex-shrink:0;transition:background .3s"></div>
     <div class="rel">
       <button class="admin-btn" onclick="openPin()" title="管理者パネル">⚙️</button>
       <div id="pendingBadge" class="pending-badge hidden"></div>
@@ -539,6 +540,26 @@ const BASE_TASKS = [
   {id:1805,t:'花粉症シーズン「症状別相談カウンター」（1〜4月）', g:'seasonal', p:'C', a:['takeuchi']},
 ];
 
+// ═══════════════════════════════ FIREBASE ═══════════════════════════════
+const FB = 'https://rxtask-d7b13-default-rtdb.asia-southeast1.firebasedatabase.app/rxtask';
+
+async function fbGet(path) {
+  try {
+    const r = await fetch(`${FB}/${path}.json`);
+    return r.ok ? r.json() : null;
+  } catch(e) { return null; }
+}
+async function fbSet(path, data) {
+  try {
+    await fetch(`${FB}/${path}.json`, {method:'PUT', body:JSON.stringify(data), headers:{'Content-Type':'application/json'}});
+  } catch(e) { console.warn('Firebase write error', e); }
+}
+async function fbPatch(path, data) {
+  try {
+    await fetch(`${FB}/${path}.json`, {method:'PATCH', body:JSON.stringify(data), headers:{'Content-Type':'application/json'}});
+  } catch(e) { console.warn('Firebase patch error', e); }
+}
+
 // ═══════════════════════════════ STATE ═══════════════════════════════
 let staff       = localStorage.getItem('rx_staff') || null;
 let proposals   = JSON.parse(localStorage.getItem('rx_proposals')    || '[]');
@@ -546,7 +567,8 @@ let customTasks = JSON.parse(localStorage.getItem('rx_custom_tasks') || '[]');
 let deletedIds  = JSON.parse(localStorage.getItem('rx_deleted_ids')  || '[]');
 const ADMIN_PIN = localStorage.getItem('rx_admin_pin') || '0000';
 
-// done = [{id, by, byName, at}, ...] — 旧データ(ID配列)は移行
+// done はスタッフ別に管理: {staffId: [{id, at}, ...], ...}
+// メモリ上は [{id, by, byName, at}] のフラット配列
 function migrateDone(raw) {
   return raw.map(item => typeof item === 'object' && item !== null
     ? item
@@ -558,6 +580,54 @@ let done = migrateDone(JSON.parse(localStorage.getItem('rx_done') || '[]'));
 let curPage = 'home'; let pFil = 'all'; let gFil = 'all';
 let pinInput = ''; let pendingApproveId = null; let approveP = 'A'; let approveAssignees = [];
 let addP = 'A'; let addAssignees = [];
+let syncIndicator = null;
+
+// ─── クラウド同期 ───
+async function syncFromCloud() {
+  showSyncStatus('syncing');
+  const data = await fbGet('');
+  if (!data) { showSyncStatus('offline'); return; }
+
+  // スタッフ別done → フラット配列に変換
+  if (data.staffDone) {
+    const allDone = [];
+    Object.entries(data.staffDone).forEach(([sid, entries]) => {
+      if (!Array.isArray(entries)) return;
+      const sname = STAFF.find(s => s.id === sid)?.name || sid;
+      entries.forEach(e => allDone.push({id: e.id, by: sid, byName: sname, at: e.at || ''}));
+    });
+    done = allDone;
+  }
+  if (data.proposals)   proposals   = Array.isArray(data.proposals)   ? data.proposals   : Object.values(data.proposals).filter(Boolean);
+  if (data.customTasks) customTasks = Array.isArray(data.customTasks) ? data.customTasks : Object.values(data.customTasks).filter(Boolean);
+  if (data.deletedIds)  deletedIds  = data.deletedIds;
+  save();
+  if (curPage) render(curPage);
+  showSyncStatus('ok');
+}
+
+async function pushMyDone() {
+  if (!staff) return;
+  const myDone = done.filter(x => x.by === staff).map(x => ({id: x.id, at: x.at}));
+  await fbSet(`staffDone/${staff}`, myDone);
+}
+async function pushShared() {
+  await fbPatch('', {
+    proposals,
+    customTasks,
+    deletedIds
+  });
+}
+
+function showSyncStatus(state) {
+  const el = document.getElementById('syncDot');
+  if (!el) return;
+  el.title = state === 'syncing' ? '同期中…' : state === 'ok' ? '同期済み' : 'オフライン';
+  el.style.background = state === 'syncing' ? '#f59e0b' : state === 'ok' ? '#22c55e' : '#ef4444';
+}
+
+// 30秒ごとに自動同期
+setInterval(() => { if(staff) syncFromCloud(); }, 30000);
 
 // ═══════════════════════════════ TASK HELPERS ═══════════════════════════════
 function getAllTasks() {
@@ -586,6 +656,7 @@ function toggle(id) {
     toast('完了 ✓');
   }
   save(); render(curPage);
+  pushMyDone(); // Firebase に即時反映
 }
 
 function taskHTML(t) {
@@ -621,6 +692,7 @@ function pickStaff(id, name) {
   document.getElementById('fab').style.display  = 'flex';
   document.getElementById('spill').textContent  = name + ' さん';
   buildFilters(); updatePendingBadge(); render('home');
+  syncFromCloud(); // ログイン時にクラウドから最新データを取得
 }
 function changeStaff() { document.getElementById('staffScreen').style.display = 'flex'; }
 
@@ -770,7 +842,7 @@ function submitProposal() {
     proposedBy:staff, proposedByName:sname,
     proposedAt:new Date().toLocaleDateString('ja-JP'), status:'pending'
   });
-  save(); updatePendingBadge();
+  save(); updatePendingBadge(); pushShared();
   toast('提案を送信しました！管理者が確認します 📬');
   closeOverlay('proposeOverlay');
 }
@@ -825,7 +897,7 @@ function renderAdminProposals(){
 }
 
 function rejectProposal(id){
-  proposals=proposals.filter(p=>p.id!==id); save(); updatePendingBadge(); renderAdminProposals(); toast('提案を却下しました');
+  proposals=proposals.filter(p=>p.id!==id); save(); updatePendingBadge(); pushShared(); renderAdminProposals(); toast('提案を却下しました');
 }
 
 function openApproveModal(id){
@@ -856,7 +928,7 @@ function confirmApprove(){
   const task={id:'custom_'+Date.now(),t:prop.title,g:prop.genre,p:approveP,a:approveAssignees,proposedBy:prop.proposedByName,isCustom:true};
   customTasks.push(task);
   prop.status='approved';
-  save(); updatePendingBadge(); closeApproveModal(); renderAdminProposals();
+  save(); updatePendingBadge(); pushShared(); closeApproveModal(); renderAdminProposals();
   toast('タスクとして承認しました ✅');
 }
 
@@ -885,7 +957,7 @@ function addTaskDirectly(){
   if(!addAssignees.length){toast('担当者を選んでください');return;}
   const genre=document.getElementById('addGenre').value;
   const task={id:'custom_'+Date.now(),t:title,g:genre,p:addP,a:[...addAssignees],isCustom:true};
-  customTasks.push(task); save();
+  customTasks.push(task); save(); pushShared();
   document.getElementById('addTitle').value=''; addAssignees=[]; renderAddAssignees();
   toast('タスクを追加しました ✅'); render(curPage);
 }
@@ -913,7 +985,7 @@ function deleteTask(id){
     if(String(id).startsWith('custom_')){customTasks=customTasks.filter(t=>t.id!==id);}
     else{deletedIds.push(Number(id));}
     done=done.filter(x=>String(x.id)!==String(id));
-    save(); renderAdminTasks(); render(curPage); toast('タスクを削除しました');
+    save(); pushShared(); renderAdminTasks(); render(curPage); toast('タスクを削除しました');
   }
 }
 
