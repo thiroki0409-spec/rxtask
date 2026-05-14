@@ -142,9 +142,25 @@
     .del-btn { flex-shrink: 0; background: #fee2e2; border: none; color: var(--pa); width: 32px; height: 32px; border-radius: 8px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
     /* ── ADMIN TABS ── */
-    .admin-tabs { display: flex; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
-    .atab { flex: 1; padding: 13px; text-align: center; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; border-bottom: 2px solid transparent; transition: .2s; }
+    .admin-tabs { display: flex; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; overflow-x: auto; scrollbar-width: none; }
+    .admin-tabs::-webkit-scrollbar { display: none; }
+    .atab { flex-shrink: 0; padding: 13px 12px; text-align: center; font-size: 12px; font-weight: 600; color: var(--sub); cursor: pointer; border-bottom: 2px solid transparent; transition: .2s; white-space: nowrap; }
     .atab.on { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* ── STAFF PROGRESS ── */
+    .sp-card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .sp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .sp-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: #fff; flex-shrink: 0; }
+    .sp-name { font-size: 16px; font-weight: 700; }
+    .sp-role { font-size: 11px; color: var(--sub); margin-top: 2px; }
+    .sp-stats { display: flex; gap: 16px; margin-bottom: 10px; }
+    .sp-stat { text-align: center; }
+    .sp-stat-num { font-size: 20px; font-weight: 800; }
+    .sp-stat-lbl { font-size: 10px; color: var(--sub); }
+    .sp-done-list { margin-top: 10px; }
+    .sp-done-item { font-size: 12px; color: var(--sub); padding: 4px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
+    .sp-done-item:last-child { border-bottom: none; }
+    .sp-toggle { font-size: 12px; color: var(--pl); cursor: pointer; margin-top: 8px; }
 
     /* ── PIN SCREEN ── */
     #pinScreen { background: var(--primary); }
@@ -279,9 +295,10 @@
     <h2>⚙️ 管理者パネル</h2>
   </div>
   <div class="admin-tabs">
-    <div class="atab on"  id="atab-proposals" onclick="switchAdminTab('proposals')">📬 提案レビュー <span id="propCount"></span></div>
-    <div class="atab"     id="atab-add"       onclick="switchAdminTab('add')">➕ タスク追加</div>
-    <div class="atab"     id="atab-tasks"     onclick="switchAdminTab('tasks')">📋 タスク管理</div>
+    <div class="atab on"  id="atab-proposals" onclick="switchAdminTab('proposals')">📬 提案 <span id="propCount"></span></div>
+    <div class="atab"     id="atab-add"       onclick="switchAdminTab('add')">➕ 追加</div>
+    <div class="atab"     id="atab-tasks"     onclick="switchAdminTab('tasks')">📋 管理</div>
+    <div class="atab"     id="atab-progress"  onclick="switchAdminTab('progress')">📊 スタッフ進捗</div>
   </div>
   <div class="overlay-body">
     <!-- Proposals Tab -->
@@ -312,6 +329,8 @@
     </div>
     <!-- Tasks Tab -->
     <div id="admin-tasks" style="display:none"></div>
+    <!-- Progress Tab -->
+    <div id="admin-progress" style="display:none"></div>
   </div>
 </div>
 
@@ -522,11 +541,19 @@ const BASE_TASKS = [
 
 // ═══════════════════════════════ STATE ═══════════════════════════════
 let staff       = localStorage.getItem('rx_staff') || null;
-let done        = JSON.parse(localStorage.getItem('rx_done')         || '[]');
 let proposals   = JSON.parse(localStorage.getItem('rx_proposals')    || '[]');
 let customTasks = JSON.parse(localStorage.getItem('rx_custom_tasks') || '[]');
 let deletedIds  = JSON.parse(localStorage.getItem('rx_deleted_ids')  || '[]');
 const ADMIN_PIN = localStorage.getItem('rx_admin_pin') || '0000';
+
+// done = [{id, by, byName, at}, ...] — 旧データ(ID配列)は移行
+function migrateDone(raw) {
+  return raw.map(item => typeof item === 'object' && item !== null
+    ? item
+    : {id: item, by: 'unknown', byName: '不明', at: ''}
+  );
+}
+let done = migrateDone(JSON.parse(localStorage.getItem('rx_done') || '[]'));
 
 let curPage = 'home'; let pFil = 'all'; let gFil = 'all';
 let pinInput = ''; let pendingApproveId = null; let approveP = 'A'; let approveAssignees = [];
@@ -539,7 +566,7 @@ function getAllTasks() {
 function myTasks() {
   return getAllTasks().filter(t => t.a.includes(staff) || t.a.includes('all'));
 }
-const isDone  = id  => done.includes(id);
+const isDone  = id  => done.some(x => String(x.id) === String(id));
 const getG    = id  => GENRES.find(g => g.id === id) || {label:id, color:'#888'};
 const getStaffName = id => id === 'all' ? '全員' : STAFF.find(s => s.id === id)?.name || id;
 
@@ -551,8 +578,13 @@ function save() {
 }
 
 function toggle(id) {
-  if (isDone(id)) done = done.filter(x => x !== id);
-  else { done.push(id); toast('完了 ✓'); }
+  if (isDone(id)) {
+    done = done.filter(x => String(x.id) !== String(id));
+  } else {
+    const sname = STAFF.find(s => s.id === staff)?.name || staff;
+    done.push({id, by: staff, byName: sname, at: new Date().toLocaleDateString('ja-JP')});
+    toast('完了 ✓');
+  }
   save(); render(curPage);
 }
 
@@ -766,13 +798,14 @@ function openAdmin() {
 }
 function closeOverlay(id){document.getElementById(id).style.display='none';}
 function switchAdminTab(tab){
-  ['proposals','add','tasks'].forEach(t=>{
+  ['proposals','add','tasks','progress'].forEach(t=>{
     document.getElementById('admin-'+t).style.display=t===tab?'block':'none';
     document.getElementById('atab-'+t).classList.toggle('on',t===tab);
   });
   if(tab==='proposals') renderAdminProposals();
   if(tab==='tasks')     renderAdminTasks();
   if(tab==='add')       renderAddAssignees();
+  if(tab==='progress')  renderAdminProgress();
 }
 
 function renderAdminProposals(){
@@ -879,9 +912,74 @@ function deleteTask(id){
   if(confirm('このタスクを削除しますか？')){
     if(String(id).startsWith('custom_')){customTasks=customTasks.filter(t=>t.id!==id);}
     else{deletedIds.push(Number(id));}
-    done=done.filter(x=>String(x)!==String(id));
+    done=done.filter(x=>String(x.id)!==String(id));
     save(); renderAdminTasks(); render(curPage); toast('タスクを削除しました');
   }
+}
+
+// ═══════════════════════════════ ADMIN PROGRESS ═══════════════════════════════
+const AVATAR_COLORS = ['#2e5fa3','#10b981','#f59e0b','#ec4899','#8b5cf6','#dc2626','#0ea5e9'];
+function renderAdminProgress(){
+  const allTasks = getAllTasks();
+  // 全体サマリー
+  const totalDone = done.length;
+  const totalTasks = allTasks.length;
+  const globalPct = totalTasks ? Math.round(totalDone / totalTasks * 100) : 0;
+
+  // スタッフ別集計
+  const staffCards = STAFF.map((s, idx) => {
+    const assigned = allTasks.filter(t => t.a.includes(s.id) || t.a.includes('all'));
+    const completedEntries = done.filter(x => x.by === s.id);
+    const completedIds = new Set(completedEntries.map(x => String(x.id)));
+    const assignedDone = assigned.filter(t => completedIds.has(String(t.id)));
+    const pct = assigned.length ? Math.round(assignedDone.length / assigned.length * 100) : 0;
+    const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+
+    // 完了タスク詳細（最新5件）
+    const recentDone = completedEntries
+      .slice(-5).reverse()
+      .map(x => {
+        const task = allTasks.find(t => String(t.id) === String(x.id));
+        return task ? `<div class="sp-done-item">✅ <span>${task.t}</span><span style="margin-left:auto;font-size:11px;color:var(--sub)">${x.at}</span></div>` : '';
+      }).filter(Boolean).join('');
+
+    const pColor = pct >= 80 ? 'var(--ok)' : pct >= 50 ? 'var(--pb)' : pct >= 20 ? 'var(--pa)' : 'var(--sub)';
+
+    return `<div class="sp-card">
+      <div class="sp-header">
+        <div class="sp-avatar" style="background:${color}">${s.name.charAt(0)}</div>
+        <div>
+          <div class="sp-name">${s.name}</div>
+          <div class="sp-role">${s.role}</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div style="font-size:22px;font-weight:900;color:${pColor}">${pct}%</div>
+          <div style="font-size:11px;color:var(--sub)">${assignedDone.length}/${assigned.length}</div>
+        </div>
+      </div>
+      <div class="pbar"><div class="pfill" style="width:${pct}%;background:${pColor}"></div></div>
+      <div style="display:flex;gap:12px;margin-top:10px;font-size:12px;">
+        <span style="color:var(--pa)">🔴 A: ${assignedDone.filter(t=>t.p==='A').length}/${assigned.filter(t=>t.p==='A').length}</span>
+        <span style="color:var(--pb)">🟡 B: ${assignedDone.filter(t=>t.p==='B').length}/${assigned.filter(t=>t.p==='B').length}</span>
+        <span style="color:var(--sub)">⚪ C: ${assignedDone.filter(t=>t.p==='C').length}/${assigned.filter(t=>t.p==='C').length}</span>
+      </div>
+      ${recentDone ? `<div class="sp-done-list" style="margin-top:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:4px">最近完了したタスク</div>
+        ${recentDone}
+      </div>` : '<div style="font-size:12px;color:var(--sub);margin-top:8px">まだ完了タスクがありません</div>'}
+    </div>`;
+  }).join('');
+
+  document.getElementById('admin-progress').innerHTML = `
+    <div class="card" style="text-align:center;padding:20px;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--sub);margin-bottom:4px">全スタッフ・全タスク</div>
+      <div style="font-size:40px;font-weight:900;color:var(--primary)">${globalPct}%</div>
+      <div class="pbar" style="margin-top:12px"><div class="pfill" style="width:${globalPct}%"></div></div>
+      <div style="font-size:12px;color:var(--sub);margin-top:6px">${totalDone} / ${totalTasks} 件完了</div>
+    </div>
+    <div class="section-title" style="margin-top:0">スタッフ別進捗</div>
+    ${staffCards}
+  `;
 }
 
 // ═══════════════════════════════ UTILS ═══════════════════════════════
