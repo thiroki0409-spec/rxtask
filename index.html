@@ -9,88 +9,53 @@
   <title>RxTask</title>
   <style>
     :root {
-      --primary: #1e3a5f;
-      --primary-light: #2e5fa3;
-      --accent: #00b4d8;
-      --pa: #ef4444; --pb: #f97316; --pc: #94a3b8;
-      --ok: #22c55e;
-      --bg: #f0f4f8;
-      --card: #ffffff;
-      --text: #1e293b;
-      --sub: #64748b;
-      --border: #e2e8f0;
-      --nav: 65px;
+      --primary: #1e3a5f; --pl: #2e5fa3; --accent: #00b4d8;
+      --pa: #ef4444; --pb: #f97316; --pc: #94a3b8; --ok: #22c55e;
+      --bg: #f0f4f8; --card: #fff; --text: #1e293b; --sub: #64748b;
+      --border: #e2e8f0; --nav: 65px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body {
-      font-family: -apple-system, 'Hiragino Sans', 'Yu Gothic', sans-serif;
-      background: var(--bg); color: var(--text);
-      max-width: 430px; margin: 0 auto; min-height: 100vh;
-    }
+    body { font-family: -apple-system,'Hiragino Sans','Yu Gothic',sans-serif; background: var(--bg); color: var(--text); max-width: 430px; margin: 0 auto; min-height: 100vh; }
 
     /* ── STAFF SCREEN ── */
-    #staffScreen {
-      position: fixed; inset: 0; background: var(--primary);
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; z-index: 1000; padding: 40px 24px;
-    }
+    .fullscreen { position: fixed; inset: 0; z-index: 500; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; }
+    #staffScreen { background: var(--primary); }
     #staffScreen h1 { color: #fff; font-size: 30px; margin: 12px 0 6px; }
     #staffScreen p  { color: rgba(255,255,255,.65); font-size: 15px; margin-bottom: 36px; }
     .staff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 320px; }
-    .staff-btn {
-      background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.25);
-      border-radius: 14px; padding: 18px 12px; color: #fff; cursor: pointer;
-      text-align: center; transition: .15s;
-    }
+    .staff-btn { background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.25); border-radius: 14px; padding: 18px 12px; color: #fff; cursor: pointer; text-align: center; transition: .15s; }
     .staff-btn:active { transform: scale(.96); background: rgba(255,255,255,.22); }
     .staff-btn .sname { font-size: 16px; font-weight: 700; }
     .staff-btn .srole { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 4px; }
 
     /* ── HEADER ── */
-    .header {
-      background: var(--primary); color: #fff;
-      padding: 14px 18px; padding-top: calc(14px + env(safe-area-inset-top));
-      position: sticky; top: 0; z-index: 100;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .header { background: var(--primary); color: #fff; padding: 14px 18px; padding-top: calc(14px + env(safe-area-inset-top)); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
     .logo span { color: var(--accent); }
-    .staff-pill {
-      background: rgba(255,255,255,.15); padding: 6px 14px;
-      border-radius: 20px; font-size: 13px; cursor: pointer;
-    }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .staff-pill { background: rgba(255,255,255,.15); padding: 6px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+    .admin-btn { background: none; border: none; color: rgba(255,255,255,.7); font-size: 20px; cursor: pointer; padding: 4px; }
 
     /* ── BOTTOM NAV ── */
-    .bnav {
-      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-      width: 100%; max-width: 430px; background: #fff;
-      border-top: 1px solid var(--border);
-      display: flex; padding-bottom: env(safe-area-inset-bottom); z-index: 100;
-    }
-    .nitem {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      padding: 9px 0; cursor: pointer; color: var(--sub); font-size: 10px;
-      gap: 3px; transition: color .2s; user-select: none;
-    }
+    .bnav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: #fff; border-top: 1px solid var(--border); display: flex; padding-bottom: env(safe-area-inset-bottom); z-index: 100; }
+    .nitem { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 9px 0; cursor: pointer; color: var(--sub); font-size: 10px; gap: 3px; transition: color .2s; user-select: none; }
     .nitem.on { color: var(--primary); }
     .nicon { font-size: 22px; line-height: 1; }
 
+    /* ── FAB ── */
+    .fab { position: fixed; right: 20px; bottom: calc(var(--nav) + 16px); width: 54px; height: 54px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 24px; border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(0,180,216,.45); z-index: 90; display: flex; align-items: center; justify-content: center; transition: transform .15s; }
+    .fab:active { transform: scale(.93); }
+
     /* ── MAIN ── */
-    .main { padding: 16px; padding-bottom: calc(var(--nav) + 20px); }
+    .main { padding: 16px; padding-bottom: calc(var(--nav) + 24px); }
     .page { animation: fadeUp .2s ease; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
 
     /* ── CARDS ── */
-    .card {
-      background: var(--card); border-radius: 14px; padding: 16px;
-      margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
-    }
-    .section-title {
-      font-size: 12px; font-weight: 700; color: var(--sub);
-      text-transform: uppercase; letter-spacing: .5px; margin: 20px 0 10px;
-    }
+    .card { background: var(--card); border-radius: 14px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .section-title { font-size: 12px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin: 20px 0 10px; }
 
-    /* ── STAT GRID ── */
+    /* ── STATS ── */
     .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
     .stat-card { background: #fff; border-radius: 12px; padding: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
     .stat-num { font-size: 26px; font-weight: 800; }
@@ -98,91 +63,141 @@
 
     /* ── PROGRESS ── */
     .pbar { background: var(--border); border-radius: 10px; height: 8px; overflow: hidden; margin: 8px 0; }
-    .pfill { height: 100%; background: linear-gradient(90deg,var(--primary-light),var(--accent)); border-radius: 10px; transition: width .5s; }
+    .pfill { height: 100%; background: linear-gradient(90deg,var(--pl),var(--accent)); border-radius: 10px; transition: width .5s; }
 
     /* ── TASK ITEM ── */
-    .titem {
-      display: flex; align-items: flex-start; gap: 12px;
-      padding: 13px 0; border-bottom: 1px solid var(--border); cursor: pointer;
-    }
+    .titem { display: flex; align-items: flex-start; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
     .titem:last-child { border-bottom: none; }
-    .tcheck {
-      width: 24px; height: 24px; border: 2px solid var(--border); border-radius: 6px;
-      flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px;
-      transition: all .2s;
-    }
+    .tcheck { width: 24px; height: 24px; border: 2px solid var(--border); border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px; transition: all .2s; }
     .titem.done .tcheck { background: var(--ok); border-color: var(--ok); }
     .titem.done .tcheck::after { content: '✓'; color: #fff; font-size: 13px; font-weight: 800; }
     .titem.done .ttitle { text-decoration: line-through; color: var(--sub); }
     .tcontent { flex: 1; min-width: 0; }
     .ttitle { font-size: 14px; line-height: 1.45; margin-bottom: 6px; }
     .tmeta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
-    .badge {
-      display: inline-flex; align-items: center; padding: 2px 9px;
-      border-radius: 10px; font-size: 11px; font-weight: 700;
-    }
-    .ba { background: #fee2e2; color: var(--pa); }
-    .bb { background: #ffedd5; color: var(--pb); }
-    .bc { background: #f1f5f9; color: var(--sub); }
-    .gtag {
-      font-size: 11px; color: var(--sub);
-      background: var(--bg); padding: 2px 8px; border-radius: 8px;
-    }
+    .badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+    .ba { background: #fee2e2; color: var(--pa); } .bb { background: #ffedd5; color: var(--pb); } .bc { background: #f1f5f9; color: var(--sub); }
+    .gtag { font-size: 11px; color: var(--sub); background: var(--bg); padding: 2px 8px; border-radius: 8px; }
 
-    /* ── FILTER CHIPS ── */
-    .fscroll {
-      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
-      margin-bottom: 14px; scrollbar-width: none;
-    }
+    /* ── FILTERS ── */
+    .fscroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
     .fscroll::-webkit-scrollbar { display: none; }
-    .chip {
-      flex-shrink: 0; padding: 6px 14px; border-radius: 20px; font-size: 13px;
-      border: 1.5px solid var(--border); background: #fff; color: var(--sub);
-      cursor: pointer; white-space: nowrap; transition: all .18s; user-select: none;
-    }
+    .chip { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; font-size: 13px; border: 1.5px solid var(--border); background: #fff; color: var(--sub); cursor: pointer; white-space: nowrap; transition: all .18s; user-select: none; }
     .chip.on { background: var(--primary); border-color: var(--primary); color: #fff; }
 
     /* ── GENRE HEADER ── */
-    .genre-hd {
-      display: flex; align-items: center; gap: 8px;
-      padding: 14px 0 8px; font-weight: 700; font-size: 15px;
-    }
+    .genre-hd { display: flex; align-items: center; gap: 8px; padding: 14px 0 8px; font-weight: 700; font-size: 15px; }
 
     /* ── EMPTY ── */
     .empty { text-align: center; padding: 40px 20px; color: var(--sub); }
     .empty-ico { font-size: 40px; margin-bottom: 12px; }
 
+    /* ── OVERLAY BASE ── */
+    .overlay { position: fixed; inset: 0; z-index: 400; display: none; flex-direction: column; background: var(--bg); overflow-y: auto; }
+    .overlay-header { background: var(--primary); color: #fff; padding: 16px 18px; padding-top: calc(16px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+    .overlay-header h2 { font-size: 18px; font-weight: 700; flex: 1; }
+    .back-btn { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 4px; }
+    .overlay-body { padding: 16px; padding-bottom: 40px; }
+
+    /* ── FORM ELEMENTS ── */
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 13px; font-weight: 600; color: var(--sub); margin-bottom: 6px; display: block; }
+    .form-input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; font-family: inherit; background: #fff; color: var(--text); outline: none; transition: border-color .2s; }
+    .form-input:focus { border-color: var(--pl); }
+    .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+    .form-textarea { resize: none; height: 80px; }
+    .btn { width: 100%; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 700; border: none; cursor: pointer; transition: .15s; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:active { opacity: .85; }
+    .btn-danger { background: #fee2e2; color: var(--pa); }
+    .btn-success { background: #dcfce7; color: #16a34a; }
+    .btn-sm { width: auto; padding: 7px 16px; font-size: 13px; border-radius: 8px; font-weight: 600; }
+
+    /* ── PROPOSAL CARD ── */
+    .prop-card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); border-left: 4px solid var(--accent); }
+    .prop-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .prop-meta { font-size: 12px; color: var(--sub); margin-bottom: 10px; }
+    .prop-reason { font-size: 13px; color: var(--text); background: var(--bg); padding: 10px; border-radius: 8px; margin-bottom: 12px; line-height: 1.5; }
+    .prop-actions { display: flex; gap: 8px; }
+
+    /* ── APPROVE MODAL ── */
+    #approveModal { position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,.5); display: none; align-items: flex-end; }
+    .modal-sheet { background: #fff; border-radius: 20px 20px 0 0; padding: 24px 20px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); width: 100%; max-width: 430px; margin: 0 auto; }
+    .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 20px; }
+    .assignee-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
+    .assignee-chip { padding: 8px; border-radius: 10px; border: 1.5px solid var(--border); font-size: 13px; text-align: center; cursor: pointer; transition: .15s; background: #fff; color: var(--text); font-weight: 600; }
+    .assignee-chip.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .priority-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .pchip { flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid var(--border); text-align: center; cursor: pointer; font-weight: 700; font-size: 14px; transition: .15s; background: #fff; }
+    .pchip.pa.on { background: #fee2e2; border-color: var(--pa); color: var(--pa); }
+    .pchip.pb.on { background: #ffedd5; border-color: var(--pb); color: var(--pb); }
+    .pchip.pc.on { background: #f1f5f9; border-color: var(--sub); color: var(--sub); }
+
+    /* ── ADMIN TASK ITEM ── */
+    .admin-titem { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .admin-titem:last-child { border-bottom: none; }
+    .admin-tcontent { flex: 1; min-width: 0; }
+    .admin-ttitle { font-size: 14px; line-height: 1.35; }
+    .admin-tmeta { font-size: 11px; color: var(--sub); margin-top: 3px; }
+    .del-btn { flex-shrink: 0; background: #fee2e2; border: none; color: var(--pa); width: 32px; height: 32px; border-radius: 8px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    /* ── ADMIN TABS ── */
+    .admin-tabs { display: flex; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
+    .atab { flex: 1; padding: 13px; text-align: center; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; border-bottom: 2px solid transparent; transition: .2s; }
+    .atab.on { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* ── PIN SCREEN ── */
+    #pinScreen { background: var(--primary); }
+    #pinScreen h2 { color: #fff; font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    #pinScreen p  { color: rgba(255,255,255,.6); font-size: 14px; margin-bottom: 32px; }
+    .pin-dots { display: flex; gap: 16px; margin-bottom: 32px; }
+    .pin-dot { width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,.3); transition: background .15s; }
+    .pin-dot.filled { background: var(--accent); }
+    .pin-pad { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; width: 100%; max-width: 280px; }
+    .pin-key { background: rgba(255,255,255,.12); border: none; color: #fff; border-radius: 14px; height: 64px; font-size: 22px; font-weight: 700; cursor: pointer; transition: .12s; }
+    .pin-key:active { transform: scale(.93); background: rgba(255,255,255,.22); }
+    .pin-error { color: #f87171; font-size: 14px; margin-top: 12px; min-height: 20px; }
+
+    /* ── BADGE PENDING ── */
+    .badge-pending { background: #fef9c3; color: #a16207; }
+    .pending-badge { position: absolute; top: -4px; right: -4px; background: var(--pa); color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+
     /* ── TOAST ── */
-    .toast {
-      position: fixed; bottom: calc(var(--nav) + 20px); left: 50%; transform: translateX(-50%);
-      background: #1e293b; color: #fff; padding: 10px 22px; border-radius: 20px;
-      font-size: 13px; z-index: 999; pointer-events: none; animation: fadeUp .2s ease;
-    }
+    .toast { position: fixed; bottom: calc(var(--nav) + 20px); left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 10px 22px; border-radius: 20px; font-size: 13px; z-index: 999; pointer-events: none; animation: fadeUp .2s ease; white-space: nowrap; }
 
     /* ── PROGRESS PAGE BARS ── */
     .gbar-row { margin-bottom: 13px; }
     .gbar-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
     .gbar-sub { font-size: 12px; color: var(--sub); }
     .gbar-inner { height: 6px; border-radius: 10px; transition: width .5s; }
+
+    .hidden { display: none !important; }
+    .rel { position: relative; }
   </style>
 </head>
 <body>
 
-<!-- STAFF SCREEN -->
-<div id="staffScreen">
+<!-- ═══ STAFF SCREEN ═══ -->
+<div class="fullscreen" id="staffScreen">
   <div style="font-size:40px">💊</div>
   <h1>RxTask</h1>
   <p>スタッフを選んでください</p>
   <div class="staff-grid" id="staffGrid"></div>
 </div>
 
-<!-- HEADER -->
+<!-- ═══ HEADER ═══ -->
 <div class="header" id="hdr" style="display:none">
   <div class="logo">Rx<span>Task</span></div>
-  <div class="staff-pill" id="spill" onclick="changeStaff()">---</div>
+  <div class="header-right">
+    <div class="rel">
+      <button class="admin-btn" onclick="openPin()" title="管理者パネル">⚙️</button>
+      <div id="pendingBadge" class="pending-badge hidden"></div>
+    </div>
+    <div class="staff-pill" id="spill" onclick="changeStaff()">---</div>
+  </div>
 </div>
 
-<!-- MAIN -->
+<!-- ═══ MAIN ═══ -->
 <div class="main" id="main" style="display:none">
   <div id="page-home"     class="page"></div>
   <div id="page-tasks"    class="page" style="display:none">
@@ -194,7 +209,10 @@
   <div id="page-progress" class="page" style="display:none"></div>
 </div>
 
-<!-- BOTTOM NAV -->
+<!-- ═══ FAB ═══ -->
+<button class="fab" id="fab" style="display:none" onclick="openPropose()">💡</button>
+
+<!-- ═══ BOTTOM NAV ═══ -->
 <nav class="bnav" id="bnav" style="display:none">
   <div class="nitem on"  onclick="nav('home',this)"><span class="nicon">🏠</span><span>ホーム</span></div>
   <div class="nitem"     onclick="nav('tasks',this)"><span class="nicon">📋</span><span>タスク</span></div>
@@ -202,8 +220,123 @@
   <div class="nitem"     onclick="nav('progress',this)"><span class="nicon">📊</span><span>進捗</span></div>
 </nav>
 
+<!-- ═══ PROPOSE OVERLAY ═══ -->
+<div class="overlay" id="proposeOverlay">
+  <div class="overlay-header">
+    <button class="back-btn" onclick="closeOverlay('proposeOverlay')">✕</button>
+    <h2>💡 タスクを提案する</h2>
+  </div>
+  <div class="overlay-body">
+    <p style="font-size:13px;color:var(--sub);margin-bottom:20px">管理者が確認して正式タスク化します</p>
+    <div class="form-group">
+      <label class="form-label">タスク内容 *</label>
+      <input class="form-input" id="propTitle" placeholder="例：レジ横に衝動買いコーナーを設置する" maxlength="80">
+    </div>
+    <div class="form-group">
+      <label class="form-label">ジャンル</label>
+      <select class="form-input form-select" id="propGenre"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">理由・背景（任意）</label>
+      <textarea class="form-input form-textarea" id="propReason" placeholder="なぜこのタスクが必要だと思ったか、気づきなど"></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="submitProposal()">提案を送信する</button>
+  </div>
+</div>
+
+<!-- ═══ PIN SCREEN ═══ -->
+<div class="fullscreen" id="pinScreen" style="display:none">
+  <div style="font-size:36px;margin-bottom:12px">🔐</div>
+  <h2>管理者ログイン</h2>
+  <p>PINコードを入力してください</p>
+  <div class="pin-dots" id="pinDots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pinKey('1')">1</button>
+    <button class="pin-key" onclick="pinKey('2')">2</button>
+    <button class="pin-key" onclick="pinKey('3')">3</button>
+    <button class="pin-key" onclick="pinKey('4')">4</button>
+    <button class="pin-key" onclick="pinKey('5')">5</button>
+    <button class="pin-key" onclick="pinKey('6')">6</button>
+    <button class="pin-key" onclick="pinKey('7')">7</button>
+    <button class="pin-key" onclick="pinKey('8')">8</button>
+    <button class="pin-key" onclick="pinKey('9')">9</button>
+    <button class="pin-key" onclick="pinKey('back')" style="font-size:16px">⌫</button>
+    <button class="pin-key" onclick="pinKey('0')">0</button>
+    <button class="pin-key" onclick="closePinScreen()" style="font-size:14px;color:rgba(255,255,255,.5)">戻る</button>
+  </div>
+  <div class="pin-error" id="pinError"></div>
+</div>
+
+<!-- ═══ ADMIN PANEL ═══ -->
+<div class="overlay" id="adminOverlay">
+  <div class="overlay-header">
+    <button class="back-btn" onclick="closeOverlay('adminOverlay')">✕</button>
+    <h2>⚙️ 管理者パネル</h2>
+  </div>
+  <div class="admin-tabs">
+    <div class="atab on"  id="atab-proposals" onclick="switchAdminTab('proposals')">📬 提案レビュー <span id="propCount"></span></div>
+    <div class="atab"     id="atab-add"       onclick="switchAdminTab('add')">➕ タスク追加</div>
+    <div class="atab"     id="atab-tasks"     onclick="switchAdminTab('tasks')">📋 タスク管理</div>
+  </div>
+  <div class="overlay-body">
+    <!-- Proposals Tab -->
+    <div id="admin-proposals"></div>
+    <!-- Add Tab -->
+    <div id="admin-add" style="display:none">
+      <div class="form-group">
+        <label class="form-label">タスク内容 *</label>
+        <input class="form-input" id="addTitle" placeholder="タスク名を入力" maxlength="80">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ジャンル</label>
+        <select class="form-input form-select" id="addGenre"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">優先度</label>
+        <div class="priority-row">
+          <div class="pchip pa on" id="addP-A" onclick="selectAddP('A')">🔴 A</div>
+          <div class="pchip pb"    id="addP-B" onclick="selectAddP('B')">🟡 B</div>
+          <div class="pchip pc"    id="addP-C" onclick="selectAddP('C')">⚪ C</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">担当者（複数選択可）</label>
+        <div class="assignee-grid" id="addAssignees"></div>
+      </div>
+      <button class="btn btn-primary" onclick="addTaskDirectly()">タスクを追加する</button>
+    </div>
+    <!-- Tasks Tab -->
+    <div id="admin-tasks" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ═══ APPROVE MODAL ═══ -->
+<div id="approveModal">
+  <div class="modal-sheet">
+    <div class="modal-title">✅ 提案を承認する</div>
+    <div id="approvePropTitle" style="font-size:14px;color:var(--sub);margin-bottom:20px"></div>
+    <div class="form-label" style="margin-bottom:10px">優先度</div>
+    <div class="priority-row" style="margin-bottom:20px">
+      <div class="pchip pa on" id="apP-A" onclick="selectApP('A')">🔴 A<br><span style="font-size:10px;font-weight:400">今すぐ</span></div>
+      <div class="pchip pb"    id="apP-B" onclick="selectApP('B')">🟡 B<br><span style="font-size:10px;font-weight:400">今月〜来月</span></div>
+      <div class="pchip pc"    id="apP-C" onclick="selectApP('C')">⚪ C<br><span style="font-size:10px;font-weight:400">中長期</span></div>
+    </div>
+    <div class="form-label" style="margin-bottom:10px">担当者（複数選択可）</div>
+    <div class="assignee-grid" id="approveAssignees" style="margin-bottom:20px"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-danger btn-sm" style="flex:1" onclick="closeApproveModal()">キャンセル</button>
+      <button class="btn btn-success btn-sm" style="flex:2" onclick="confirmApprove()">承認してタスク化</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ═══════════════════════════════ DATA ═══════════════════════════════
+// ═══════════════════════════════ BASE DATA ═══════════════════════════════
 const STAFF = [
   {id:'takeuchi',  name:'竹内',    role:'管理薬剤師'},
   {id:'tamura_a',  name:'田村篤史', role:'薬剤師'},
@@ -215,278 +348,272 @@ const STAFF = [
 ];
 
 const GENRES = [
-  {id:'routine',   label:'🔄 全員ルーティン',   color:'#6366f1'},
+  {id:'routine',   label:'🔄 全員ルーティン',    color:'#6366f1'},
   {id:'display',   label:'🏪 売場・ディスプレイ', color:'#0ea5e9'},
-  {id:'customer',  label:'💬 接客・トーク',      color:'#10b981'},
-  {id:'product',   label:'📦 商品・サービス',    color:'#f59e0b'},
-  {id:'line',      label:'📱 LINE・デジタル',    color:'#06b6d4'},
-  {id:'sns',       label:'📸 SNS・集客',         color:'#ec4899'},
-  {id:'delivery',  label:'🚚 配達・提携',        color:'#84cc16'},
-  {id:'ops',       label:'📋 業務・在庫',        color:'#6b7280'},
-  {id:'staff',     label:'👥 スタッフ管理',      color:'#8b5cf6'},
-  {id:'price',     label:'💰 価格・販促',        color:'#f97316'},
-  {id:'cx',        label:'🔁 顧客体験',          color:'#14b8a6'},
-  {id:'local',     label:'🏘️ 地域連携',          color:'#78716c'},
-  {id:'health',    label:'📚 健康教育',          color:'#0284c7'},
-  {id:'medical',   label:'🏥 医療連携',          color:'#dc2626'},
-  {id:'beauty',    label:'💄 美容',              color:'#d946ef'},
-  {id:'corporate', label:'🏢 法人向け',          color:'#0f766e'},
-  {id:'data',      label:'📊 データ分析',        color:'#7c3aed'},
-  {id:'cost',      label:'💸 コスト削減',        color:'#b45309'},
-  {id:'seasonal',  label:'📅 季節・イベント',    color:'#16a34a'},
+  {id:'customer',  label:'💬 接客・トーク',       color:'#10b981'},
+  {id:'product',   label:'📦 商品・サービス',     color:'#f59e0b'},
+  {id:'line',      label:'📱 LINE・デジタル',     color:'#06b6d4'},
+  {id:'sns',       label:'📸 SNS・集客',          color:'#ec4899'},
+  {id:'delivery',  label:'🚚 配達・提携',         color:'#84cc16'},
+  {id:'ops',       label:'📋 業務・在庫',         color:'#6b7280'},
+  {id:'staff',     label:'👥 スタッフ管理',       color:'#8b5cf6'},
+  {id:'price',     label:'💰 価格・販促',         color:'#f97316'},
+  {id:'cx',        label:'🔁 顧客体験',           color:'#14b8a6'},
+  {id:'local',     label:'🏘️ 地域連携',           color:'#78716c'},
+  {id:'health',    label:'📚 健康教育',           color:'#0284c7'},
+  {id:'medical',   label:'🏥 医療連携',           color:'#dc2626'},
+  {id:'beauty',    label:'💄 美容',               color:'#d946ef'},
+  {id:'corporate', label:'🏢 法人向け',           color:'#0f766e'},
+  {id:'data',      label:'📊 データ分析',         color:'#7c3aed'},
+  {id:'cost',      label:'💸 コスト削減',         color:'#b45309'},
+  {id:'seasonal',  label:'📅 季節・イベント',     color:'#16a34a'},
 ];
 
-const T = [
-  // ルーティン
+const BASE_TASKS = [
   {id:1,  t:'患者さんの名前を呼ぶ',                          g:'routine',  p:'A', a:['all'], f:'毎回'},
   {id:2,  t:'お薬手帳の確認「今日お持ちですか？」',           g:'routine',  p:'A', a:['all'], f:'毎回'},
-  {id:3,  t:'処方薬のワンポイント説明（1文）',               g:'routine',  p:'A', a:['all'], f:'毎回'},
-  {id:4,  t:'OTCの追加確認「○○はお持ちですか？」',          g:'routine',  p:'A', a:['all'], f:'毎回'},
-  {id:5,  t:'購入後に「使い方メモ」を手書きで同封',          g:'routine',  p:'A', a:['all'], f:'毎回'},
-  {id:6,  t:'かかりつけ薬剤師への登録を案内',               g:'routine',  p:'A', a:['all'], f:'都度'},
-  {id:7,  t:'GoogleクチコミQRカードを渡す',                  g:'routine',  p:'A', a:['all'], f:'会計後'},
-  {id:8,  t:'引継ぎノートを読む・書く',                      g:'routine',  p:'A', a:['all'], f:'毎日'},
-  {id:9,  t:'期限切れ間近商品をアウトレットへ',              g:'routine',  p:'A', a:['all'], f:'毎日'},
-  {id:10, t:'「今日のおすすめ1品」POPを設置・確認',          g:'routine',  p:'A', a:['all'], f:'毎日'},
-  {id:11, t:'「今週の推し商品」をLINEで確認（月曜）',        g:'routine',  p:'A', a:['all'], f:'毎週'},
-  {id:12, t:'「うまくいった接客」をLINEグループに投稿',      g:'routine',  p:'A', a:['all'], f:'毎週'},
-  // 売場
-  {id:101,t:'入口ドアに入店チャイム（鈴）設置',              g:'display',  p:'A', a:['takeuchi']},
-  {id:102,t:'「薬剤師イチ推し商品」POP設置（持ち回り）',     g:'display',  p:'A', a:['yamauchi']},
-  {id:103,t:'「今週のイチオシ」特設コーナー設置',            g:'display',  p:'A', a:['tamura_a']},
-  {id:104,t:'今の季節に合わせた特集コーナー（熱中症）',      g:'display',  p:'A', a:['takahashi']},
-  {id:105,t:'睡眠・ストレス対応商品の深夜コーナー強化',      g:'display',  p:'A', a:['takahashi']},
-  {id:106,t:'即効性OTCコーナー（夜間来店者向け）',           g:'display',  p:'A', a:['takahashi']},
-  {id:107,t:'症状別「迷ったらこれ」帯コーナー設置',          g:'display',  p:'A', a:['takeuchi']},
-  {id:108,t:'夏向け熱中症・虫刺されキット特設展開（準備）',  g:'display',  p:'B', a:['takahashi']},
-  {id:109,t:'季節テーマ展示の月次ローテーション',            g:'display',  p:'B', a:['takahashi']},
-  {id:110,t:'棚の高さ別ゾーン分け（子供向け・高齢者向け）',  g:'display',  p:'B', a:['takeuchi']},
-  {id:111,t:'「一緒に買われる商品」隣接陳列',                g:'display',  p:'B', a:['takahashi']},
-  {id:112,t:'薬剤師の顔写真＋一言コメントPOP',              g:'display',  p:'B', a:['takeuchi']},
-  {id:113,t:'ジェネリックコーナーの強化・特集',              g:'display',  p:'B', a:['takeuchi']},
-  {id:114,t:'棚ラベル・価格表示の統一・刷新',               g:'display',  p:'B', a:['tamura_a']},
-  {id:115,t:'サンプル・試供品コーナーの常設',               g:'display',  p:'B', a:['iyoda']},
-  {id:116,t:'商品の「使い切り期間」表示ラベル貼付',          g:'display',  p:'C', a:['tamura_a']},
-  // 接客
-  {id:201,t:'処方箋受付時のOTC確認声かけ徹底',              g:'customer', p:'A', a:['all']},
-  {id:202,t:'スマレジ来店履歴で「久しぶりですね」声かけ',    g:'customer', p:'A', a:['all']},
-  {id:203,t:'処方箋受付後のOTC追加提案スクリプト作成',       g:'customer', p:'A', a:['takeuchi']},
-  {id:204,t:'かかりつけ薬剤師制度の登録促進',               g:'customer', p:'A', a:['all']},
-  {id:205,t:'美容点滴成分OTC訴求の接客',                    g:'customer', p:'A', a:['ito']},
-  {id:206,t:'症状別3段階提案マニュアルの作成・活用',         g:'customer', p:'B', a:['takeuchi']},
-  {id:207,t:'「今月のおすすめ1分トーク」全スタッフ統一',     g:'customer', p:'B', a:['takeuchi']},
-  {id:208,t:'「この薬、何週間で効果？」FAQ作成',             g:'customer', p:'B', a:['takeuchi']},
-  {id:209,t:'長期処方患者への中間フォロー連絡',              g:'customer', p:'B', a:['ito']},
-  {id:210,t:'初来店「店内ガイドカード」を渡す',              g:'customer', p:'B', a:['takeuchi']},
-  {id:211,t:'「また来てください」カードの手渡し',            g:'customer', p:'B', a:['takeuchi']},
-  {id:212,t:'処方箋持参者に「次回もこちらへ」カードを渡す',  g:'customer', p:'B', a:['takeuchi']},
-  // 商品
-  {id:301,t:'飲酒後ケアセット（胃腸薬＋ビタミン）パック作成', g:'product', p:'A', a:['takeuchi','iyoda']},
-  {id:302,t:'二日酔い対策セットのまとめ売り',               g:'product',  p:'A', a:['takeuchi']},
-  {id:303,t:'美容セット作成（グルタチオン・ビタミンC等）',   g:'product',  p:'A', a:['takeuchi','ito']},
-  {id:304,t:'「夜間ならでは」深夜・早朝限定サービス開発',    g:'product',  p:'B', a:['takeuchi']},
-  {id:305,t:'「仕事帰りに解決」1分相談サービスの告知',       g:'product',  p:'B', a:['takeuchi']},
-  {id:306,t:'スポーツ向けサプリ・プロテインコーナー新設',    g:'product',  p:'B', a:['takeuchi']},
-  {id:307,t:'旅行・出張向け「持ち歩き薬セット」販売',        g:'product',  p:'B', a:['takeuchi','iyoda']},
-  {id:308,t:'外国語対応薬袋（英語・中国語）の導入',          g:'product',  p:'B', a:['takeuchi']},
-  {id:309,t:'UV対策パーフェクトセット（春季限定バンドル）',  g:'product',  p:'B', a:['takeuchi','iyoda']},
-  // LINE
-  {id:401,t:'LINE友だち登録QRコードを店頭・レジ横に設置',    g:'line',     p:'A', a:['takeuchi']},
-  {id:402,t:'LINE配信の曜日・時間帯の最適化',               g:'line',     p:'B', a:['takeuchi']},
-  {id:403,t:'LINEリッチメニューの刷新',                     g:'line',     p:'B', a:['takeuchi','yamauchi']},
-  {id:404,t:'LINEポイントカード機能の導入',                  g:'line',     p:'B', a:['takeuchi']},
-  {id:405,t:'LINE限定「夜間特別価格」の案内',               g:'line',     p:'B', a:['takeuchi']},
-  {id:406,t:'「今夜おすすめ1品」を毎晩19時に配信',           g:'line',     p:'B', a:['takeuchi']},
-  {id:407,t:'常連客に誕生月クーポンをLINEで送付',           g:'line',     p:'B', a:['takeuchi']},
-  {id:408,t:'前回購入商品フォローアップLINE',               g:'line',     p:'B', a:['takeuchi']},
-  {id:409,t:'薬剤師監修「健康コラム」をLINEで週1配信',       g:'line',     p:'B', a:['takeuchi','yamauchi']},
-  // SNS
-  {id:501,t:'Instagram「薬剤師の一日」ストーリー投稿スタート', g:'sns',    p:'A', a:['yamauchi']},
-  {id:502,t:'GoogleマップクチコミQRカード作成・配布',         g:'sns',    p:'A', a:['takeuchi']},
-  {id:503,t:'Googleビジネスプロフィールの写真・情報更新',     g:'sns',    p:'A', a:['yamauchi']},
-  {id:504,t:'「夜だから起きる症状」テーマのInstagram投稿',    g:'sns',    p:'A', a:['yamauchi']},
-  {id:505,t:'Google検索「六本木薬局」表示情報の充実',        g:'sns',    p:'A', a:['yamauchi']},
-  {id:506,t:'InstagramのFAQハイライト整備',                  g:'sns',    p:'B', a:['yamauchi']},
-  {id:507,t:'TikTok「薬剤師あるある」動画',                  g:'sns',    p:'B', a:['yamauchi']},
-  {id:508,t:'YouTube/TikTok短尺動画「薬剤師が教える○○」',   g:'sns',    p:'B', a:['yamauchi']},
-  {id:509,t:'ピル相談実績のSNS発信',                         g:'sns',    p:'B', a:['yamauchi','ito']},
-  {id:510,t:'Googleビジネスプロフィールのインサイト月次確認', g:'sns',    p:'B', a:['yamauchi']},
-  // 配達・提携
-  {id:601,t:'近隣クリニック・診療所へのFAX・DM送付',         g:'delivery', p:'B', a:['takeuchi']},
-  {id:602,t:'近隣ホテルのフロントにパンフ設置',              g:'delivery', p:'B', a:['takeuchi']},
-  {id:603,t:'居酒屋・バーへの深夜薬局カード設置交渉',        g:'delivery', p:'B', a:['takeuchi']},
-  {id:604,t:'提携院向け「処方箋受付スムーズ化」案内書作成',  g:'delivery', p:'B', a:['takeuchi']},
-  {id:605,t:'近隣クリニック待合に置き型パンフを設置',        g:'delivery', p:'B', a:['takeuchi']},
-  {id:606,t:'配達サービスの対応エリア拡大検討',              g:'delivery', p:'C', a:['takeuchi']},
-  {id:607,t:'「夜間配達」対応の試験的導入',                  g:'delivery', p:'C', a:['takeuchi']},
-  // 業務・在庫
-  {id:701,t:'店舗清掃ルールの作成・周知・実施確認',          g:'ops', p:'A', a:['takeuchi']},
-  {id:702,t:'キーボックス管理ルールの作成・周知',            g:'ops', p:'A', a:['takeuchi']},
-  {id:703,t:'発注点スマレジ登録（全商品）',                  g:'ops', p:'A', a:['takeuchi','tamura_a']},
-  {id:704,t:'使用期限管理・先出し徹底',                      g:'ops', p:'A', a:['tamura_a']},
-  {id:705,t:'シフト引継ぎ共有ノートの運用開始',              g:'ops', p:'A', a:['takeuchi']},
-  {id:706,t:'期限切れ間近商品をアウトレットへ移動（日次）',  g:'ops', p:'A', a:['tamura_a']},
-  {id:707,t:'処方箋FAX受付案内POPの作成・設置',              g:'ops', p:'B', a:['takeuchi']},
-  {id:708,t:'スマレジ日次・週次レポートの自動化',            g:'ops', p:'B', a:['takeuchi']},
-  {id:709,t:'在庫「見える化」ボードの作成',                  g:'ops', p:'B', a:['takeuchi']},
-  {id:710,t:'発注ミス防止ダブルチェック体制の構築',          g:'ops', p:'B', a:['takeuchi']},
-  {id:711,t:'業者との価格交渉（月1回）',                     g:'ops', p:'B', a:['takeuchi']},
-  {id:712,t:'棚割りの定期見直し（四半期）',                  g:'ops', p:'B', a:['takeuchi','takahashi']},
-  {id:713,t:'不動在庫の問屋返品交渉',                        g:'ops', p:'B', a:['takeuchi']},
-  // スタッフ管理
+  {id:3,  t:'処方薬のワンポイント説明（1文）',                g:'routine',  p:'A', a:['all'], f:'毎回'},
+  {id:4,  t:'OTCの追加確認「○○はお持ちですか？」',           g:'routine',  p:'A', a:['all'], f:'毎回'},
+  {id:5,  t:'購入後に「使い方メモ」を手書きで同封',           g:'routine',  p:'A', a:['all'], f:'毎回'},
+  {id:6,  t:'かかりつけ薬剤師への登録を案内',                g:'routine',  p:'A', a:['all'], f:'都度'},
+  {id:7,  t:'GoogleクチコミQRカードを渡す',                   g:'routine',  p:'A', a:['all'], f:'会計後'},
+  {id:8,  t:'引継ぎノートを読む・書く',                       g:'routine',  p:'A', a:['all'], f:'毎日'},
+  {id:9,  t:'期限切れ間近商品をアウトレットへ',               g:'routine',  p:'A', a:['all'], f:'毎日'},
+  {id:10, t:'「今日のおすすめ1品」POPを設置・確認',           g:'routine',  p:'A', a:['all'], f:'毎日'},
+  {id:11, t:'「今週の推し商品」をLINEで確認（月曜）',         g:'routine',  p:'A', a:['all'], f:'毎週'},
+  {id:12, t:'「うまくいった接客」をLINEグループに投稿',       g:'routine',  p:'A', a:['all'], f:'毎週'},
+  {id:101,t:'入口ドアに入店チャイム（鈴）設置',               g:'display',  p:'A', a:['takeuchi']},
+  {id:102,t:'「薬剤師イチ推し商品」POP設置（持ち回り）',      g:'display',  p:'A', a:['yamauchi']},
+  {id:103,t:'「今週のイチオシ」特設コーナー設置',             g:'display',  p:'A', a:['tamura_a']},
+  {id:104,t:'今の季節に合わせた特集コーナー（熱中症）',       g:'display',  p:'A', a:['takahashi']},
+  {id:105,t:'睡眠・ストレス対応商品の深夜コーナー強化',       g:'display',  p:'A', a:['takahashi']},
+  {id:106,t:'即効性OTCコーナー（夜間来店者向け）',            g:'display',  p:'A', a:['takahashi']},
+  {id:107,t:'症状別「迷ったらこれ」帯コーナー設置',           g:'display',  p:'A', a:['takeuchi']},
+  {id:108,t:'夏向け熱中症・虫刺されキット特設展開（準備）',   g:'display',  p:'B', a:['takahashi']},
+  {id:109,t:'季節テーマ展示の月次ローテーション',             g:'display',  p:'B', a:['takahashi']},
+  {id:110,t:'棚の高さ別ゾーン分け（子供向け・高齢者向け）',   g:'display',  p:'B', a:['takeuchi']},
+  {id:111,t:'「一緒に買われる商品」隣接陳列',                 g:'display',  p:'B', a:['takahashi']},
+  {id:112,t:'薬剤師の顔写真＋一言コメントPOP',               g:'display',  p:'B', a:['takeuchi']},
+  {id:113,t:'ジェネリックコーナーの強化・特集',               g:'display',  p:'B', a:['takeuchi']},
+  {id:114,t:'棚ラベル・価格表示の統一・刷新',                 g:'display',  p:'B', a:['tamura_a']},
+  {id:115,t:'サンプル・試供品コーナーの常設',                 g:'display',  p:'B', a:['iyoda']},
+  {id:116,t:'商品の「使い切り期間」表示ラベル貼付',           g:'display',  p:'C', a:['tamura_a']},
+  {id:201,t:'処方箋受付時のOTC確認声かけ徹底',               g:'customer', p:'A', a:['all']},
+  {id:202,t:'スマレジ来店履歴で「久しぶりですね」声かけ',     g:'customer', p:'A', a:['all']},
+  {id:203,t:'処方箋受付後のOTC追加提案スクリプト作成',        g:'customer', p:'A', a:['takeuchi']},
+  {id:204,t:'かかりつけ薬剤師制度の登録促進',                 g:'customer', p:'A', a:['all']},
+  {id:205,t:'美容点滴成分OTC訴求の接客',                      g:'customer', p:'A', a:['ito']},
+  {id:206,t:'症状別3段階提案マニュアルの作成・活用',          g:'customer', p:'B', a:['takeuchi']},
+  {id:207,t:'「今月のおすすめ1分トーク」全スタッフ統一',      g:'customer', p:'B', a:['takeuchi']},
+  {id:208,t:'「この薬、何週間で効果？」FAQ作成',              g:'customer', p:'B', a:['takeuchi']},
+  {id:209,t:'長期処方患者への中間フォロー連絡',               g:'customer', p:'B', a:['ito']},
+  {id:210,t:'初来店「店内ガイドカード」を渡す',               g:'customer', p:'B', a:['takeuchi']},
+  {id:211,t:'「また来てください」カードの手渡し',             g:'customer', p:'B', a:['takeuchi']},
+  {id:212,t:'処方箋持参者に「次回もこちらへ」カードを渡す',   g:'customer', p:'B', a:['takeuchi']},
+  {id:301,t:'飲酒後ケアセット（胃腸薬＋ビタミン）パック作成', g:'product',  p:'A', a:['takeuchi','iyoda']},
+  {id:302,t:'二日酔い対策セットのまとめ売り',                 g:'product',  p:'A', a:['takeuchi']},
+  {id:303,t:'美容セット作成（グルタチオン・ビタミンC等）',    g:'product',  p:'A', a:['takeuchi','ito']},
+  {id:304,t:'「夜間ならでは」深夜・早朝限定サービス開発',     g:'product',  p:'B', a:['takeuchi']},
+  {id:305,t:'「仕事帰りに解決」1分相談サービスの告知',        g:'product',  p:'B', a:['takeuchi']},
+  {id:306,t:'スポーツ向けサプリ・プロテインコーナー新設',     g:'product',  p:'B', a:['takeuchi']},
+  {id:307,t:'旅行・出張向け「持ち歩き薬セット」販売',         g:'product',  p:'B', a:['takeuchi','iyoda']},
+  {id:308,t:'外国語対応薬袋（英語・中国語）の導入',           g:'product',  p:'B', a:['takeuchi']},
+  {id:309,t:'UV対策パーフェクトセット（春季限定バンドル）',   g:'product',  p:'B', a:['takeuchi','iyoda']},
+  {id:401,t:'LINE友だち登録QRコードを店頭・レジ横に設置',     g:'line',     p:'A', a:['takeuchi']},
+  {id:402,t:'LINE配信の曜日・時間帯の最適化',                 g:'line',     p:'B', a:['takeuchi']},
+  {id:403,t:'LINEリッチメニューの刷新',                       g:'line',     p:'B', a:['takeuchi','yamauchi']},
+  {id:404,t:'LINEポイントカード機能の導入',                   g:'line',     p:'B', a:['takeuchi']},
+  {id:405,t:'LINE限定「夜間特別価格」の案内',                 g:'line',     p:'B', a:['takeuchi']},
+  {id:406,t:'「今夜おすすめ1品」を毎晩19時に配信',            g:'line',     p:'B', a:['takeuchi']},
+  {id:407,t:'常連客に誕生月クーポンをLINEで送付',             g:'line',     p:'B', a:['takeuchi']},
+  {id:408,t:'前回購入商品フォローアップLINE',                 g:'line',     p:'B', a:['takeuchi']},
+  {id:409,t:'薬剤師監修「健康コラム」をLINEで週1配信',        g:'line',     p:'B', a:['takeuchi','yamauchi']},
+  {id:501,t:'Instagram「薬剤師の一日」ストーリー投稿スタート',g:'sns',      p:'A', a:['yamauchi']},
+  {id:502,t:'GoogleマップクチコミQRカード作成・配布',          g:'sns',      p:'A', a:['takeuchi']},
+  {id:503,t:'Googleビジネスプロフィールの写真・情報更新',      g:'sns',      p:'A', a:['yamauchi']},
+  {id:504,t:'「夜だから起きる症状」テーマのInstagram投稿',     g:'sns',      p:'A', a:['yamauchi']},
+  {id:505,t:'Google検索「六本木薬局」表示情報の充実',         g:'sns',      p:'A', a:['yamauchi']},
+  {id:506,t:'InstagramのFAQハイライト整備',                    g:'sns',      p:'B', a:['yamauchi']},
+  {id:507,t:'TikTok「薬剤師あるある」動画',                    g:'sns',      p:'B', a:['yamauchi']},
+  {id:508,t:'YouTube/TikTok短尺動画「薬剤師が教える○○」',    g:'sns',      p:'B', a:['yamauchi']},
+  {id:509,t:'ピル相談実績のSNS発信',                          g:'sns',      p:'B', a:['yamauchi','ito']},
+  {id:510,t:'Googleビジネスプロフィールのインサイト月次確認',  g:'sns',      p:'B', a:['yamauchi']},
+  {id:601,t:'近隣クリニック・診療所へのFAX・DM送付',          g:'delivery', p:'B', a:['takeuchi']},
+  {id:602,t:'近隣ホテルのフロントにパンフ設置',               g:'delivery', p:'B', a:['takeuchi']},
+  {id:603,t:'居酒屋・バーへの深夜薬局カード設置交渉',         g:'delivery', p:'B', a:['takeuchi']},
+  {id:604,t:'提携院向け「処方箋受付スムーズ化」案内書作成',   g:'delivery', p:'B', a:['takeuchi']},
+  {id:605,t:'近隣クリニック待合に置き型パンフを設置',         g:'delivery', p:'B', a:['takeuchi']},
+  {id:606,t:'配達サービスの対応エリア拡大検討',               g:'delivery', p:'C', a:['takeuchi']},
+  {id:607,t:'「夜間配達」対応の試験的導入',                   g:'delivery', p:'C', a:['takeuchi']},
+  {id:701,t:'店舗清掃ルールの作成・周知・実施確認',           g:'ops',      p:'A', a:['takeuchi']},
+  {id:702,t:'キーボックス管理ルールの作成・周知',             g:'ops',      p:'A', a:['takeuchi']},
+  {id:703,t:'発注点スマレジ登録（全商品）',                   g:'ops',      p:'A', a:['takeuchi','tamura_a']},
+  {id:704,t:'使用期限管理・先出し徹底',                       g:'ops',      p:'A', a:['tamura_a']},
+  {id:705,t:'シフト引継ぎ共有ノートの運用開始',               g:'ops',      p:'A', a:['takeuchi']},
+  {id:706,t:'期限切れ間近商品をアウトレットへ移動（日次）',   g:'ops',      p:'A', a:['tamura_a']},
+  {id:707,t:'処方箋FAX受付案内POPの作成・設置',               g:'ops',      p:'B', a:['takeuchi']},
+  {id:708,t:'スマレジ日次・週次レポートの自動化',             g:'ops',      p:'B', a:['takeuchi']},
+  {id:709,t:'在庫「見える化」ボードの作成',                   g:'ops',      p:'B', a:['takeuchi']},
+  {id:710,t:'発注ミス防止ダブルチェック体制の構築',           g:'ops',      p:'B', a:['takeuchi']},
+  {id:711,t:'業者との価格交渉（月1回）',                      g:'ops',      p:'B', a:['takeuchi']},
+  {id:712,t:'棚割りの定期見直し（四半期）',                   g:'ops',      p:'B', a:['takeuchi','takahashi']},
+  {id:713,t:'不動在庫の問屋返品交渉',                         g:'ops',      p:'B', a:['takeuchi']},
   {id:801,t:'「今週の推し商品」を毎週月曜にLINEで全スタッフへ共有', g:'staff', p:'A', a:['takeuchi']},
-  {id:802,t:'空き時間タスクリスト作成・常備',                g:'staff', p:'A', a:['takeuchi']},
+  {id:802,t:'空き時間タスクリスト作成・常備',                 g:'staff',    p:'A', a:['takeuchi']},
   {id:803,t:'「うまくいった接客事例」をLINEで共有する文化づくり', g:'staff', p:'A', a:['takeuchi']},
-  {id:804,t:'新商品入荷時の15分スタッフ勉強会',              g:'staff', p:'B', a:['takeuchi']},
-  {id:805,t:'スタッフ個人の「得意商品」1人1品制度化',        g:'staff', p:'B', a:['takeuchi']},
-  {id:806,t:'接客ロールプレイ（月1回）',                     g:'staff', p:'B', a:['takeuchi','ito']},
-  {id:807,t:'スタッフ推し商品をPOP付きで展開する制度',       g:'staff', p:'B', a:['takeuchi']},
-  {id:808,t:'かかりつけ薬剤師制度理解研修',                  g:'staff', p:'B', a:['takeuchi']},
-  {id:809,t:'スタッフ社割制度（商品の試用）',                g:'staff', p:'B', a:['takeuchi']},
-  // 価格・販促
-  {id:901,t:'まとめ買い割引（3個以上5%OFF）スマレジ設定',    g:'price', p:'B', a:['takeuchi']},
-  {id:902,t:'夜限定価格の設定（23時以降）',                  g:'price', p:'B', a:['takeuchi']},
-  {id:903,t:'ポイント2倍デーの設定（週1回）',                g:'price', p:'B', a:['takeuchi']},
-  {id:904,t:'「今日だけ特価」週次サプライズプロモーション',   g:'price', p:'B', a:['takeuchi']},
-  {id:905,t:'処方箋持参者へのOTCクーポン同封',               g:'price', p:'B', a:['takeuchi']},
-  {id:906,t:'雨の日限定割引のスマレジ設定',                  g:'price', p:'B', a:['takeuchi']},
-  // 顧客体験
-  {id:1001,t:'「かかりつけ薬局カード」の発行',               g:'cx', p:'B', a:['takeuchi']},
-  {id:1002,t:'待合スペースに無料Wi-Fi設置',                  g:'cx', p:'B', a:['takeuchi']},
-  {id:1003,t:'処方箋待ち時間に血圧・体温測定無料提供',       g:'cx', p:'B', a:['ito']},
-  {id:1004,t:'「初めてのお客様」向け店内案内カード作成',      g:'cx', p:'B', a:['takeuchi']},
-  {id:1005,t:'店内BGMを季節に合わせて変更',                  g:'cx', p:'B', a:['yamauchi']},
-  {id:1006,t:'会計待ち中に見られる「健康豆知識カード」',      g:'cx', p:'B', a:['iyoda']},
-  {id:1007,t:'リピーター向けまとめ買い割引',                 g:'cx', p:'B', a:['takeuchi']},
-  // 地域連携
-  {id:1101,t:'近隣マンション掲示板へのチラシ掲出',           g:'local', p:'B', a:['takeuchi','tamura_a']},
-  {id:1102,t:'近隣オフィスビルへの法人向けサービス案内配布', g:'local', p:'B', a:['takeuchi','tamura_a']},
-  {id:1103,t:'近隣ジム・ヨガスタジオへのサプリサンプル提供', g:'local', p:'B', a:['takeuchi','iyoda']},
-  {id:1104,t:'地域SNSグループへの情報投稿',                  g:'local', p:'B', a:['yamauchi']},
-  {id:1105,t:'近隣クリニックへの定期訪問（月1回）',          g:'local', p:'B', a:['takeuchi']},
-  // 健康教育
+  {id:804,t:'新商品入荷時の15分スタッフ勉強会',               g:'staff',    p:'B', a:['takeuchi']},
+  {id:805,t:'スタッフ個人の「得意商品」1人1品制度化',         g:'staff',    p:'B', a:['takeuchi']},
+  {id:806,t:'接客ロールプレイ（月1回）',                      g:'staff',    p:'B', a:['takeuchi','ito']},
+  {id:807,t:'スタッフ推し商品をPOP付きで展開する制度',        g:'staff',    p:'B', a:['takeuchi']},
+  {id:808,t:'かかりつけ薬剤師制度理解研修',                   g:'staff',    p:'B', a:['takeuchi']},
+  {id:809,t:'スタッフ社割制度（商品の試用）',                 g:'staff',    p:'B', a:['takeuchi']},
+  {id:901,t:'まとめ買い割引（3個以上5%OFF）スマレジ設定',     g:'price',    p:'B', a:['takeuchi']},
+  {id:902,t:'夜限定価格の設定（23時以降）',                   g:'price',    p:'B', a:['takeuchi']},
+  {id:903,t:'ポイント2倍デーの設定（週1回）',                 g:'price',    p:'B', a:['takeuchi']},
+  {id:904,t:'「今日だけ特価」週次サプライズプロモーション',    g:'price',    p:'B', a:['takeuchi']},
+  {id:905,t:'処方箋持参者へのOTCクーポン同封',                g:'price',    p:'B', a:['takeuchi']},
+  {id:906,t:'雨の日限定割引のスマレジ設定',                   g:'price',    p:'B', a:['takeuchi']},
+  {id:1001,t:'「かかりつけ薬局カード」の発行',                g:'cx',       p:'B', a:['takeuchi']},
+  {id:1002,t:'待合スペースに無料Wi-Fi設置',                   g:'cx',       p:'B', a:['takeuchi']},
+  {id:1003,t:'処方箋待ち時間に血圧・体温測定無料提供',        g:'cx',       p:'B', a:['ito']},
+  {id:1004,t:'「初めてのお客様」向け店内案内カード作成',       g:'cx',       p:'B', a:['takeuchi']},
+  {id:1005,t:'店内BGMを季節に合わせて変更',                   g:'cx',       p:'B', a:['yamauchi']},
+  {id:1006,t:'会計待ち中に見られる「健康豆知識カード」',       g:'cx',       p:'B', a:['iyoda']},
+  {id:1007,t:'リピーター向けまとめ買い割引',                  g:'cx',       p:'B', a:['takeuchi']},
+  {id:1101,t:'近隣マンション掲示板へのチラシ掲出',            g:'local',    p:'B', a:['takeuchi','tamura_a']},
+  {id:1102,t:'近隣オフィスビルへの法人向けサービス案内配布',  g:'local',    p:'B', a:['takeuchi','tamura_a']},
+  {id:1103,t:'近隣ジム・ヨガスタジオへのサプリサンプル提供',  g:'local',    p:'B', a:['takeuchi','iyoda']},
+  {id:1104,t:'地域SNSグループへの情報投稿',                   g:'local',    p:'B', a:['yamauchi']},
+  {id:1105,t:'近隣クリニックへの定期訪問（月1回）',           g:'local',    p:'B', a:['takeuchi']},
   {id:1201,t:'飲み合わせチェックサービスの告知強化（POP＋LINE）', g:'health', p:'A', a:['takeuchi']},
-  {id:1202,t:'月1回「薬の正しい飲み方」ミニ講座（10分）',    g:'health', p:'B', a:['takahashi','ito']},
+  {id:1202,t:'月1回「薬の正しい飲み方」ミニ講座（10分）',     g:'health',   p:'B', a:['takahashi','ito']},
   {id:1203,t:'疾患別「知っておきたい薬の知識」リーフレット作成', g:'health', p:'B', a:['tamura_h']},
-  {id:1204,t:'「ジェネリックって何が違う？」疑問答えコーナー', g:'health', p:'B', a:['tamura_h','tamura_a']},
-  {id:1205,t:'「処方薬の副作用Q&A」カードをお薬袋に同封',   g:'health', p:'B', a:['takeuchi']},
-  // 医療連携
-  {id:1301,t:'処方箋FAX受付案内POPの作成・設置',             g:'medical', p:'A', a:['takeuchi']},
-  {id:1302,t:'処方箋WEB送信サービスの導入検討',              g:'medical', p:'B', a:['takeuchi']},
-  {id:1303,t:'退院後フォローサービスの告知',                 g:'medical', p:'C', a:['takeuchi']},
-  {id:1304,t:'在宅訪問薬剤管理指導の積極開拓',              g:'medical', p:'C', a:['takeuchi']},
-  // 美容
+  {id:1204,t:'「ジェネリックって何が違う？」疑問答えコーナー', g:'health',  p:'B', a:['tamura_h','tamura_a']},
+  {id:1205,t:'「処方薬の副作用Q&A」カードをお薬袋に同封',    g:'health',   p:'B', a:['takeuchi']},
+  {id:1301,t:'処方箋FAX受付案内POPの作成・設置',              g:'medical',  p:'A', a:['takeuchi']},
+  {id:1302,t:'処方箋WEB送信サービスの導入検討',               g:'medical',  p:'B', a:['takeuchi']},
+  {id:1303,t:'退院後フォローサービスの告知',                  g:'medical',  p:'C', a:['takeuchi']},
+  {id:1304,t:'在宅訪問薬剤管理指導の積極開拓',               g:'medical',  p:'C', a:['takeuchi']},
   {id:1401,t:'美容セット作成（グルタチオン・ビタミンC・コラーゲン等）', g:'beauty', p:'A', a:['takeuchi','ito']},
-  {id:1402,t:'「グルタチオン・ビタミンCをOTCで摂る」訴求接客', g:'beauty', p:'A', a:['ito']},
-  {id:1403,t:'「美容相談コーナー」週1回設置（曜日固定）',    g:'beauty', p:'B', a:['ito']},
-  {id:1404,t:'インバウンド向け日本製スキンケアブランド特集', g:'beauty', p:'B', a:['takeuchi','yamauchi']},
-  {id:1405,t:'ドクターズコスメの取り扱い拡充',              g:'beauty', p:'B', a:['takeuchi']},
-  // 法人
-  {id:1501,t:'近隣企業の「常備薬補充」定期契約サービス開始', g:'corporate', p:'B', a:['takeuchi']},
-  {id:1502,t:'ホテル・旅館向け「アメニティ薬品セット」卸販売', g:'corporate', p:'B', a:['takeuchi']},
-  {id:1503,t:'近隣飲食店・サービス業向けスタッフ割引カード発行', g:'corporate', p:'B', a:['takeuchi']},
-  {id:1504,t:'外国人従業員向け多言語対応薬案内書作成',      g:'corporate', p:'B', a:['takeuchi']},
-  // データ
-  {id:1601,t:'スマレジ客層分類の整備・接客ルール化',         g:'data', p:'A', a:['takeuchi']},
-  {id:1602,t:'スマレジ時間帯別売上分析→スタッフ配置最適化', g:'data', p:'B', a:['takeuchi']},
-  {id:1603,t:'「売れ筋TOP10」月次集計→発注・陳列に反映',    g:'data', p:'B', a:['takeuchi']},
-  {id:1604,t:'購買データから「一緒に買われる商品」隣接陳列', g:'data', p:'B', a:['takeuchi']},
-  {id:1605,t:'LINE配信の開封率・クリック率の月次レビュー',   g:'data', p:'B', a:['takeuchi']},
-  {id:1606,t:'客単価の週次モニタリング',                     g:'data', p:'B', a:['takeuchi']},
-  {id:1607,t:'顧客満足度アンケート（四半期）',               g:'data', p:'B', a:['ito']},
-  // コスト削減
-  {id:1701,t:'仕入れ先の相見積もり取得',                    g:'cost', p:'B', a:['takeuchi']},
-  {id:1702,t:'広告費の費用対効果測定',                       g:'cost', p:'B', a:['takeuchi']},
+  {id:1402,t:'「グルタチオン・ビタミンCをOTCで摂る」訴求接客', g:'beauty',  p:'A', a:['ito']},
+  {id:1403,t:'「美容相談コーナー」週1回設置（曜日固定）',     g:'beauty',   p:'B', a:['ito']},
+  {id:1404,t:'インバウンド向け日本製スキンケアブランド特集',   g:'beauty',  p:'B', a:['takeuchi','yamauchi']},
+  {id:1405,t:'ドクターズコスメの取り扱い拡充',               g:'beauty',   p:'B', a:['takeuchi']},
+  {id:1501,t:'近隣企業の「常備薬補充」定期契約サービス開始',  g:'corporate',p:'B', a:['takeuchi']},
+  {id:1502,t:'ホテル・旅館向け「アメニティ薬品セット」卸販売',g:'corporate',p:'B', a:['takeuchi']},
+  {id:1503,t:'近隣飲食店・サービス業向けスタッフ割引カード発行',g:'corporate',p:'B',a:['takeuchi']},
+  {id:1504,t:'外国人従業員向け多言語対応薬案内書作成',        g:'corporate',p:'B', a:['takeuchi']},
+  {id:1601,t:'スマレジ客層分類の整備・接客ルール化',          g:'data',     p:'A', a:['takeuchi']},
+  {id:1602,t:'スマレジ時間帯別売上分析→スタッフ配置最適化',  g:'data',     p:'B', a:['takeuchi']},
+  {id:1603,t:'「売れ筋TOP10」月次集計→発注・陳列に反映',     g:'data',     p:'B', a:['takeuchi']},
+  {id:1604,t:'購買データから「一緒に買われる商品」隣接陳列',   g:'data',     p:'B', a:['takeuchi']},
+  {id:1605,t:'LINE配信の開封率・クリック率の月次レビュー',    g:'data',     p:'B', a:['takeuchi']},
+  {id:1606,t:'客単価の週次モニタリング',                      g:'data',     p:'B', a:['takeuchi']},
+  {id:1607,t:'顧客満足度アンケート（四半期）',                g:'data',     p:'B', a:['ito']},
+  {id:1701,t:'仕入れ先の相見積もり取得',                      g:'cost',     p:'B', a:['takeuchi']},
+  {id:1702,t:'広告費の費用対効果測定',                        g:'cost',     p:'B', a:['takeuchi']},
   {id:1703,t:'メーカーの販促支援（什器・POP・サンプル）積極活用', g:'cost', p:'B', a:['takeuchi']},
-  // 季節
   {id:1801,t:'夏向け熱中症・虫刺されキット特設展開（準備開始）', g:'seasonal', p:'A', a:['takeuchi','takahashi']},
-  {id:1802,t:'秋：免疫対策フェア（ビタミンD・乳酸菌特集）', g:'seasonal', p:'C', a:['takeuchi']},
-  {id:1803,t:'年末：「お正月に備える常備薬セット」',         g:'seasonal', p:'C', a:['takeuchi']},
+  {id:1802,t:'秋：免疫対策フェア（ビタミンD・乳酸菌特集）',  g:'seasonal', p:'C', a:['takeuchi']},
+  {id:1803,t:'年末：「お正月に備える常備薬セット」',          g:'seasonal', p:'C', a:['takeuchi']},
   {id:1804,t:'インフルエンザシーズン前の予防対策セット早期告知', g:'seasonal', p:'C', a:['takeuchi']},
   {id:1805,t:'花粉症シーズン「症状別相談カウンター」（1〜4月）', g:'seasonal', p:'C', a:['takeuchi']},
 ];
 
 // ═══════════════════════════════ STATE ═══════════════════════════════
-let staff    = localStorage.getItem('rx_staff') || null;
-let done     = JSON.parse(localStorage.getItem('rx_done') || '[]');
-let curPage  = 'home';
-let pFil     = 'all';
-let gFil     = 'all';
+let staff       = localStorage.getItem('rx_staff') || null;
+let done        = JSON.parse(localStorage.getItem('rx_done')         || '[]');
+let proposals   = JSON.parse(localStorage.getItem('rx_proposals')    || '[]');
+let customTasks = JSON.parse(localStorage.getItem('rx_custom_tasks') || '[]');
+let deletedIds  = JSON.parse(localStorage.getItem('rx_deleted_ids')  || '[]');
+const ADMIN_PIN = localStorage.getItem('rx_admin_pin') || '0000';
 
-// ═══════════════════════════════ STAFF ═══════════════════════════════
-function initStaff() {
-  document.getElementById('staffGrid').innerHTML =
-    STAFF.map(s => `<div class="staff-btn" onclick="pickStaff('${s.id}','${s.name}')">
-      <div class="sname">${s.name}</div><div class="srole">${s.role}</div>
-    </div>`).join('');
-}
-function pickStaff(id, name) {
-  staff = id;
-  localStorage.setItem('rx_staff', id);
-  document.getElementById('staffScreen').style.display = 'none';
-  document.getElementById('hdr').style.display  = 'flex';
-  document.getElementById('main').style.display = 'block';
-  document.getElementById('bnav').style.display = 'flex';
-  document.getElementById('spill').textContent  = name + ' さん';
-  buildGenreFilter();
-  render('home');
-}
-function changeStaff() { document.getElementById('staffScreen').style.display = 'flex'; }
+let curPage = 'home'; let pFil = 'all'; let gFil = 'all';
+let pinInput = ''; let pendingApproveId = null; let approveP = 'A'; let approveAssignees = [];
+let addP = 'A'; let addAssignees = [];
 
-// ═══════════════════════════════ NAV ═══════════════════════════════
-function nav(page, el) {
-  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-  document.querySelectorAll('.nitem').forEach(n => n.classList.remove('on'));
-  document.getElementById('page-' + page).style.display = 'block';
-  el.classList.add('on');
-  curPage = page;
-  render(page);
+// ═══════════════════════════════ TASK HELPERS ═══════════════════════════════
+function getAllTasks() {
+  return [...BASE_TASKS.filter(t => !deletedIds.includes(t.id)), ...customTasks];
 }
-function render(p) {
-  if (p === 'home')     renderHome();
-  if (p === 'tasks')    renderTasks();
-  if (p === 'mine')     renderMine();
-  if (p === 'progress') renderProgress();
+function myTasks() {
+  return getAllTasks().filter(t => t.a.includes(staff) || t.a.includes('all'));
 }
-
-// ═══════════════════════════════ HELPERS ═══════════════════════════════
 const isDone  = id  => done.includes(id);
 const getG    = id  => GENRES.find(g => g.id === id) || {label:id, color:'#888'};
-const myTasks = ()  => T.filter(t => t.a.includes(staff) || t.a.includes('all'));
+const getStaffName = id => id === 'all' ? '全員' : STAFF.find(s => s.id === id)?.name || id;
+
+function save() {
+  localStorage.setItem('rx_done',         JSON.stringify(done));
+  localStorage.setItem('rx_proposals',    JSON.stringify(proposals));
+  localStorage.setItem('rx_custom_tasks', JSON.stringify(customTasks));
+  localStorage.setItem('rx_deleted_ids',  JSON.stringify(deletedIds));
+}
 
 function toggle(id) {
   if (isDone(id)) done = done.filter(x => x !== id);
-  else { done.push(id); toast('完了しました ✓'); }
-  localStorage.setItem('rx_done', JSON.stringify(done));
-  render(curPage);
+  else { done.push(id); toast('完了 ✓'); }
+  save(); render(curPage);
 }
 
 function taskHTML(t) {
   const d = isDone(t.id);
+  const bc = t.p==='A'?'ba':t.p==='B'?'bb':'bc';
   const g = getG(t.g);
-  const bc = t.p === 'A' ? 'ba' : t.p === 'B' ? 'bb' : 'bc';
-  return `<div class="titem ${d?'done':''}" onclick="toggle(${t.id})">
+  return `<div class="titem ${d?'done':''}" onclick="toggle('${t.id}')">
     <div class="tcheck"></div>
     <div class="tcontent">
       <div class="ttitle">${t.t}</div>
       <div class="tmeta">
         <span class="badge ${bc}">優先${t.p}</span>
         <span class="gtag">${g.label}</span>
-        ${t.f ? `<span class="gtag">🕐 ${t.f}</span>` : ''}
+        ${t.f?`<span class="gtag">🕐 ${t.f}</span>`:''}
       </div>
     </div>
   </div>`;
 }
 
+// ═══════════════════════════════ STAFF ═══════════════════════════════
+function initStaff() {
+  document.getElementById('staffGrid').innerHTML =
+    STAFF.map(s=>`<div class="staff-btn" onclick="pickStaff('${s.id}','${s.name}')">
+      <div class="sname">${s.name}</div><div class="srole">${s.role}</div>
+    </div>`).join('');
+}
+function pickStaff(id, name) {
+  staff = id; localStorage.setItem('rx_staff', id);
+  document.getElementById('staffScreen').style.display = 'none';
+  document.getElementById('hdr').style.display  = 'flex';
+  document.getElementById('main').style.display = 'block';
+  document.getElementById('bnav').style.display = 'flex';
+  document.getElementById('fab').style.display  = 'flex';
+  document.getElementById('spill').textContent  = name + ' さん';
+  buildFilters(); updatePendingBadge(); render('home');
+}
+function changeStaff() { document.getElementById('staffScreen').style.display = 'flex'; }
+
+// ═══════════════════════════════ NAV ═══════════════════════════════
+function nav(page, el) {
+  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.nitem').forEach(n=>n.classList.remove('on'));
+  document.getElementById('page-'+page).style.display='block';
+  el.classList.add('on'); curPage=page; render(page);
+}
+function render(p) {
+  if(p==='home')     renderHome();
+  if(p==='tasks')    renderTasks();
+  if(p==='mine')     renderMine();
+  if(p==='progress') renderProgress();
+}
+
 // ═══════════════════════════════ HOME ═══════════════════════════════
 function renderHome() {
-  const my    = myTasks();
-  const aOpen = my.filter(t => t.p === 'A' && !isDone(t.id));
-  const dCnt  = my.filter(t => isDone(t.id)).length;
-  const pct   = my.length ? Math.round(dCnt / my.length * 100) : 0;
-  const sname = STAFF.find(s => s.id === staff)?.name || '';
+  const my=myTasks(), aOpen=my.filter(t=>t.p==='A'&&!isDone(t.id));
+  const dCnt=my.filter(t=>isDone(t.id)).length, pct=my.length?Math.round(dCnt/my.length*100):0;
+  const sname=STAFF.find(s=>s.id===staff)?.name||'';
+  const myPending=proposals.filter(p=>p.proposedBy===staff&&p.status==='pending');
 
-  document.getElementById('page-home').innerHTML = `
+  document.getElementById('page-home').innerHTML=`
     <div class="card">
       <div style="font-size:13px;color:var(--sub);margin-bottom:4px">おはようございます</div>
       <div style="font-size:20px;font-weight:800;margin-bottom:16px">${sname} さん</div>
@@ -502,73 +629,83 @@ function renderHome() {
       <div class="stat-card"><div class="stat-num" style="color:var(--pb)">${my.filter(t=>t.p==='B').length}</div><div class="stat-lbl">優先B</div></div>
       <div class="stat-card"><div class="stat-num" style="color:var(--pc)">${my.filter(t=>t.p==='C').length}</div><div class="stat-lbl">優先C</div></div>
     </div>
+    ${myPending.length?`
+      <div class="section-title">💡 あなたの提案（審査中）</div>
+      ${myPending.map(p=>`<div class="card" style="border-left:4px solid var(--accent)">
+        <div style="font-size:13px;font-weight:700">${p.title}</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:4px">${p.proposedAt} 提案 ・ 審査中</div>
+      </div>`).join('')}
+    `:''}
     <div class="section-title">🔴 今すぐやること（優先A）</div>
     ${aOpen.length
-      ? `<div class="card">${aOpen.map(taskHTML).join('')}</div>`
-      : `<div class="empty"><div class="empty-ico">🎉</div><div>優先Aタスクはすべて完了です！</div></div>`}
+      ?`<div class="card">${aOpen.map(taskHTML).join('')}</div>`
+      :`<div class="empty"><div class="empty-ico">🎉</div><div>優先Aタスクはすべて完了です！</div></div>`}
+    <div style="text-align:center;padding:20px 0 0">
+      <button onclick="openPropose()" style="background:none;border:1.5px dashed var(--accent);color:var(--accent);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%">
+        💡 タスクを提案する
+      </button>
+    </div>
   `;
 }
 
 // ═══════════════════════════════ TASKS ═══════════════════════════════
-function buildGenreFilter() {
-  document.getElementById('pf').innerHTML =
-    ['all','A','B','C'].map((v,i) =>
+function buildFilters() {
+  document.getElementById('pf').innerHTML=
+    ['all','A','B','C'].map(v=>
       `<div class="chip ${v==='all'?'on':''}" onclick="setPF('${v}',this)">${
-        v==='all'?'すべて': v==='A'?'🔴 優先A': v==='B'?'🟡 優先B':'⚪ 優先C'
+        v==='all'?'すべて':v==='A'?'🔴 優先A':v==='B'?'🟡 優先B':'⚪ 優先C'
       }</div>`).join('');
-  document.getElementById('gf').innerHTML =
-    `<div class="chip on" onclick="setGF('all',this)">すべて</div>` +
-    GENRES.map(g => `<div class="chip" onclick="setGF('${g.id}',this)">${g.label}</div>`).join('');
+  document.getElementById('gf').innerHTML=
+    `<div class="chip on" onclick="setGF('all',this)">すべて</div>`+
+    GENRES.map(g=>`<div class="chip" onclick="setGF('${g.id}',this)">${g.label}</div>`).join('');
+  // Populate genre selects
+  const opts = GENRES.map(g=>`<option value="${g.id}">${g.label}</option>`).join('');
+  ['propGenre','addGenre'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=opts; });
+  // Add assignee chips for add form
+  renderAddAssignees();
 }
-function setPF(v, el) {
-  pFil = v;
-  document.querySelectorAll('#pf .chip').forEach(c => c.classList.remove('on'));
-  el.classList.add('on'); renderTasks();
-}
-function setGF(v, el) {
-  gFil = v;
-  document.querySelectorAll('#gf .chip').forEach(c => c.classList.remove('on'));
-  el.classList.add('on'); renderTasks();
-}
+function setPF(v,el){pFil=v;document.querySelectorAll('#pf .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');renderTasks();}
+function setGF(v,el){gFil=v;document.querySelectorAll('#gf .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');renderTasks();}
 function renderTasks() {
-  let list = T;
-  if (pFil !== 'all') list = list.filter(t => t.p === pFil);
-  if (gFil !== 'all') list = list.filter(t => t.g === gFil);
-  const byG = {};
-  list.forEach(t => { if (!byG[t.g]) byG[t.g] = []; byG[t.g].push(t); });
-  document.getElementById('tasksBody').innerHTML =
-    Object.entries(byG).map(([gid, tasks]) =>
+  let list=getAllTasks();
+  if(pFil!=='all') list=list.filter(t=>t.p===pFil);
+  if(gFil!=='all') list=list.filter(t=>t.g===gFil);
+  const byG={};
+  list.forEach(t=>{if(!byG[t.g])byG[t.g]=[];byG[t.g].push(t);});
+  document.getElementById('tasksBody').innerHTML=
+    Object.entries(byG).map(([gid,tasks])=>
       `<div class="genre-hd">${getG(gid).label}</div>
        <div class="card">${tasks.map(taskHTML).join('')}</div>`
-    ).join('') || `<div class="empty"><div class="empty-ico">🔍</div><div>該当するタスクがありません</div></div>`;
+    ).join('')||`<div class="empty"><div class="empty-ico">🔍</div><div>該当するタスクがありません</div></div>`;
 }
 
 // ═══════════════════════════════ MINE ═══════════════════════════════
 function renderMine() {
-  const my = myTasks();
-  const byP = {A:[], B:[], C:[]};
-  my.forEach(t => byP[t.p]?.push(t));
-  const lbl = {A:'🔴 優先A（今すぐ）', B:'🟡 優先B（今月〜来月）', C:'⚪ 優先C（中長期）'};
-  document.getElementById('page-mine').innerHTML =
-    ['A','B','C'].map(p => !byP[p].length ? '' :
+  const my=myTasks(), byP={A:[],B:[],C:[]};
+  my.forEach(t=>byP[t.p]?.push(t));
+  const lbl={A:'🔴 優先A（今すぐ）',B:'🟡 優先B（今月〜来月）',C:'⚪ 優先C（中長期）'};
+  document.getElementById('page-mine').innerHTML=
+    ['A','B','C'].map(p=>!byP[p].length?'':
       `<div class="section-title">${lbl[p]}</div>
        <div class="card">${byP[p].map(taskHTML).join('')}</div>`
-    ).join('');
+    ).join('')+
+    `<div style="text-align:center;padding:20px 0 0">
+      <button onclick="openPropose()" style="background:none;border:1.5px dashed var(--accent);color:var(--accent);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%">
+        💡 タスクを提案する
+      </button>
+    </div>`;
 }
 
 // ═══════════════════════════════ PROGRESS ═══════════════════════════════
 function renderProgress() {
-  const total = T.length;
-  const dCnt  = done.length;
-  const pct   = Math.round(dCnt / total * 100);
-  const bars  = GENRES.map(g => {
-    const gt = T.filter(t => t.g === g.id);
-    const gd = gt.filter(t => isDone(t.id)).length;
-    const gp = gt.length ? Math.round(gd / gt.length * 100) : 0;
-    return {g, total:gt.length, done:gd, pct:gp};
-  }).filter(x => x.total > 0);
-
-  document.getElementById('page-progress').innerHTML = `
+  const all=getAllTasks(), total=all.length, dCnt=done.length;
+  const pct=Math.round(dCnt/total*100);
+  const bars=GENRES.map(g=>{
+    const gt=all.filter(t=>t.g===g.id);
+    const gd=gt.filter(t=>isDone(t.id)).length;
+    return{g,total:gt.length,done:gd,pct:gt.length?Math.round(gd/gt.length*100):0};
+  }).filter(x=>x.total>0);
+  document.getElementById('page-progress').innerHTML=`
     <div class="card" style="text-align:center;padding:24px 16px">
       <div style="font-size:52px;font-weight:900;color:var(--primary)">${pct}%</div>
       <div style="color:var(--sub);margin-top:4px;font-size:14px">全体完了率</div>
@@ -577,34 +714,191 @@ function renderProgress() {
     </div>
     <div class="section-title">ジャンル別進捗</div>
     <div class="card">
-      ${bars.map(x => `
-        <div class="gbar-row">
-          <div class="gbar-top">
-            <span style="font-size:13px">${x.g.label}</span>
-            <span class="gbar-sub">${x.done}/${x.total}</span>
-          </div>
-          <div class="pbar" style="height:6px">
-            <div class="gbar-inner" style="width:${x.pct}%;background:${x.g.color}"></div>
-          </div>
-        </div>`).join('')}
-    </div>
-  `;
+      ${bars.map(x=>`<div class="gbar-row">
+        <div class="gbar-top"><span>${x.g.label}</span><span class="gbar-sub">${x.done}/${x.total}</span></div>
+        <div class="pbar" style="height:6px"><div class="gbar-inner" style="width:${x.pct}%;background:${x.g.color}"></div></div>
+      </div>`).join('')}
+    </div>`;
 }
 
-// ═══════════════════════════════ TOAST ═══════════════════════════════
-function toast(msg) {
-  const el = document.createElement('div');
-  el.className = 'toast'; el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 1800);
+// ═══════════════════════════════ PROPOSE ═══════════════════════════════
+function openPropose() {
+  document.getElementById('propTitle').value='';
+  document.getElementById('propReason').value='';
+  document.getElementById('proposeOverlay').style.display='flex';
+}
+function submitProposal() {
+  const title=document.getElementById('propTitle').value.trim();
+  if(!title){toast('タスク内容を入力してください');return;}
+  const genre=document.getElementById('propGenre').value;
+  const reason=document.getElementById('propReason').value.trim();
+  const sname=STAFF.find(s=>s.id===staff)?.name||staff;
+  proposals.push({
+    id:Date.now(), title, genre, reason,
+    proposedBy:staff, proposedByName:sname,
+    proposedAt:new Date().toLocaleDateString('ja-JP'), status:'pending'
+  });
+  save(); updatePendingBadge();
+  toast('提案を送信しました！管理者が確認します 📬');
+  closeOverlay('proposeOverlay');
+}
+
+// ═══════════════════════════════ PIN ═══════════════════════════════
+function openPin() { pinInput=''; updatePinDots(); document.getElementById('pinError').textContent=''; document.getElementById('pinScreen').style.display='flex'; }
+function closePinScreen() { document.getElementById('pinScreen').style.display='none'; }
+function pinKey(k) {
+  if(k==='back'){pinInput=pinInput.slice(0,-1);}
+  else if(pinInput.length<4){pinInput+=k;}
+  updatePinDots();
+  if(pinInput.length===4){
+    if(pinInput===ADMIN_PIN){closePinScreen();openAdmin();}
+    else{document.getElementById('pinError').textContent='PINが違います';pinInput='';updatePinDots();}
+  }
+}
+function updatePinDots(){
+  for(let i=0;i<4;i++) document.getElementById('d'+i).className='pin-dot'+(i<pinInput.length?' filled':'');
+}
+
+// ═══════════════════════════════ ADMIN ═══════════════════════════════
+function openAdmin() {
+  document.getElementById('adminOverlay').style.display='flex';
+  switchAdminTab('proposals');
+}
+function closeOverlay(id){document.getElementById(id).style.display='none';}
+function switchAdminTab(tab){
+  ['proposals','add','tasks'].forEach(t=>{
+    document.getElementById('admin-'+t).style.display=t===tab?'block':'none';
+    document.getElementById('atab-'+t).classList.toggle('on',t===tab);
+  });
+  if(tab==='proposals') renderAdminProposals();
+  if(tab==='tasks')     renderAdminTasks();
+  if(tab==='add')       renderAddAssignees();
+}
+
+function renderAdminProposals(){
+  const pending=proposals.filter(p=>p.status==='pending');
+  document.getElementById('propCount').textContent=pending.length?`(${pending.length})`:'';
+  document.getElementById('admin-proposals').innerHTML= pending.length
+    ?pending.map(p=>`<div class="prop-card">
+        <div class="prop-title">${p.title}</div>
+        <div class="prop-meta">💊 ${p.proposedByName} ・ ${p.proposedAt} ・ ${getG(p.genre).label}</div>
+        ${p.reason?`<div class="prop-reason">💬 ${p.reason}</div>`:''}
+        <div class="prop-actions">
+          <button class="btn btn-danger btn-sm" onclick="rejectProposal(${p.id})">却下</button>
+          <button class="btn btn-success btn-sm" style="flex:1" onclick="openApproveModal(${p.id})">✅ 承認してタスク化</button>
+        </div>
+      </div>`).join('')
+    :`<div class="empty"><div class="empty-ico">📭</div><div>審査待ちの提案はありません</div></div>`;
+}
+
+function rejectProposal(id){
+  proposals=proposals.filter(p=>p.id!==id); save(); updatePendingBadge(); renderAdminProposals(); toast('提案を却下しました');
+}
+
+function openApproveModal(id){
+  pendingApproveId=id; approveP='A'; approveAssignees=[];
+  const prop=proposals.find(p=>p.id===id);
+  document.getElementById('approvePropTitle').textContent=prop?.title||'';
+  ['A','B','C'].forEach(p=>document.getElementById('apP-'+p).classList.toggle('on',p==='A'));
+  document.getElementById('approveAssignees').innerHTML=
+    [...STAFF,{id:'all',name:'全員',role:''}].map(s=>
+      `<div class="assignee-chip" id="aschip-${s.id}" onclick="toggleApproveAssignee('${s.id}')">${s.name}</div>`
+    ).join('');
+  document.getElementById('approveModal').style.display='flex';
+}
+function closeApproveModal(){document.getElementById('approveModal').style.display='none';}
+function selectApP(p){approveP=p;['A','B','C'].forEach(x=>document.getElementById('apP-'+x).classList.toggle('on',x===p));}
+function toggleApproveAssignee(id){
+  if(approveAssignees.includes(id)) approveAssignees=approveAssignees.filter(x=>x!==id);
+  else approveAssignees.push(id);
+  document.querySelectorAll('[id^="aschip-"]').forEach(el=>{
+    const sid=el.id.replace('aschip-','');
+    el.classList.toggle('on',approveAssignees.includes(sid));
+  });
+}
+function confirmApprove(){
+  if(!approveAssignees.length){toast('担当者を選んでください');return;}
+  const prop=proposals.find(p=>p.id===pendingApproveId);
+  if(!prop)return;
+  const task={id:'custom_'+Date.now(),t:prop.title,g:prop.genre,p:approveP,a:approveAssignees,proposedBy:prop.proposedByName,isCustom:true};
+  customTasks.push(task);
+  prop.status='approved';
+  save(); updatePendingBadge(); closeApproveModal(); renderAdminProposals();
+  toast('タスクとして承認しました ✅');
+}
+
+// ═══════════════════════════════ ADMIN ADD ═══════════════════════════════
+function renderAddAssignees(){
+  const el=document.getElementById('addAssignees');
+  if(!el)return;
+  el.innerHTML=[...STAFF,{id:'all',name:'全員',role:''}].map(s=>
+    `<div class="assignee-chip ${addAssignees.includes(s.id)?'on':''}" id="addchip-${s.id}" onclick="toggleAddAssignee('${s.id}')">${s.name}</div>`
+  ).join('');
+  // Refresh genre selects
+  const opts=GENRES.map(g=>`<option value="${g.id}">${g.label}</option>`).join('');
+  const ag=document.getElementById('addGenre'); if(ag) ag.innerHTML=opts;
+}
+function selectAddP(p){addP=p;['A','B','C'].forEach(x=>{const el=document.getElementById('addP-'+x);if(el)el.classList.toggle('on',x===p);});}
+function toggleAddAssignee(id){
+  if(addAssignees.includes(id)) addAssignees=addAssignees.filter(x=>x!==id);
+  else addAssignees.push(id);
+  document.querySelectorAll('[id^="addchip-"]').forEach(el=>{
+    el.classList.toggle('on',addAssignees.includes(el.id.replace('addchip-','')));
+  });
+}
+function addTaskDirectly(){
+  const title=document.getElementById('addTitle').value.trim();
+  if(!title){toast('タスク内容を入力してください');return;}
+  if(!addAssignees.length){toast('担当者を選んでください');return;}
+  const genre=document.getElementById('addGenre').value;
+  const task={id:'custom_'+Date.now(),t:title,g:genre,p:addP,a:[...addAssignees],isCustom:true};
+  customTasks.push(task); save();
+  document.getElementById('addTitle').value=''; addAssignees=[]; renderAddAssignees();
+  toast('タスクを追加しました ✅'); render(curPage);
+}
+
+// ═══════════════════════════════ ADMIN TASKS ═══════════════════════════════
+function renderAdminTasks(){
+  const all=getAllTasks();
+  const byG={};
+  all.forEach(t=>{if(!byG[t.g])byG[t.g]=[];byG[t.g].push(t);});
+  document.getElementById('admin-tasks').innerHTML=
+    Object.entries(byG).map(([gid,tasks])=>`
+      <div class="genre-hd">${getG(gid).label}</div>
+      <div class="card">${tasks.map(t=>`
+        <div class="admin-titem">
+          <div class="admin-tcontent">
+            <div class="admin-ttitle">${t.t}</div>
+            <div class="admin-tmeta"><span class="badge ${t.p==='A'?'ba':t.p==='B'?'bb':'bc'}">優先${t.p}</span></div>
+          </div>
+          <button class="del-btn" onclick="deleteTask('${t.id}')">🗑</button>
+        </div>`).join('')}
+      </div>`).join('');
+}
+function deleteTask(id){
+  if(confirm('このタスクを削除しますか？')){
+    if(String(id).startsWith('custom_')){customTasks=customTasks.filter(t=>t.id!==id);}
+    else{deletedIds.push(Number(id));}
+    done=done.filter(x=>String(x)!==String(id));
+    save(); renderAdminTasks(); render(curPage); toast('タスクを削除しました');
+  }
+}
+
+// ═══════════════════════════════ UTILS ═══════════════════════════════
+function updatePendingBadge(){
+  const cnt=proposals.filter(p=>p.status==='pending').length;
+  const b=document.getElementById('pendingBadge');
+  if(cnt>0){b.textContent=cnt;b.classList.remove('hidden');}
+  else{b.classList.add('hidden');}
+}
+function toast(msg){
+  const el=document.createElement('div'); el.className='toast'; el.textContent=msg;
+  document.body.appendChild(el); setTimeout(()=>el.remove(),2000);
 }
 
 // ═══════════════════════════════ INIT ═══════════════════════════════
 initStaff();
-if (staff) {
-  const s = STAFF.find(x => x.id === staff);
-  if (s) pickStaff(s.id, s.name);
-}
+if(staff){const s=STAFF.find(x=>x.id===staff);if(s)pickStaff(s.id,s.name);}
 </script>
 </body>
 </html>
