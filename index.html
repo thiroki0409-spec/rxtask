@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1e3a5f">
+  <title>RxTask</title>
+  <style>
+    :root {
+      --primary: #1e3a5f;
+      --primary-light: #2e5fa3;
+      --accent: #00b4d8;
+      --pa: #ef4444; --pb: #f97316; --pc: #94a3b8;
+      --ok: #22c55e;
+      --bg: #f0f4f8;
+      --card: #ffffff;
+      --text: #1e293b;
+      --sub: #64748b;
+      --border: #e2e8f0;
+      --nav: 65px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+      background: var(--bg); color: var(--text);
+      max-width: 430px; margin: 0 auto; min-height: 100vh;
+    }
+
+    /* ── STAFF SCREEN ── */
+    #staffScreen {
+      position: fixed; inset: 0; background: var(--primary);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; z-index: 1000; padding: 40px 24px;
+    }
+    #staffScreen h1 { color: #fff; font-size: 30px; margin: 12px 0 6px; }
+    #staffScreen p  { color: rgba(255,255,255,.65); font-size: 15px; margin-bottom: 36px; }
+    .staff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 320px; }
+    .staff-btn {
+      background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.25);
+      border-radius: 14px; padding: 18px 12px; color: #fff; cursor: pointer;
+      text-align: center; transition: .15s;
+    }
+    .staff-btn:active { transform: scale(.96); background: rgba(255,255,255,.22); }
+    .staff-btn .sname { font-size: 16px; font-weight: 700; }
+    .staff-btn .srole { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 4px; }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--primary); color: #fff;
+      padding: 14px 18px; padding-top: calc(14px + env(safe-area-inset-top));
+      position: sticky; top: 0; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent); }
+    .staff-pill {
+      background: rgba(255,255,255,.15); padding: 6px 14px;
+      border-radius: 20px; font-size: 13px; cursor: pointer;
+    }
+
+    /* ── BOTTOM NAV ── */
+    .bnav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 430px; background: #fff;
+      border-top: 1px solid var(--border);
+      display: flex; padding-bottom: env(safe-area-inset-bottom); z-index: 100;
+    }
+    .nitem {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 9px 0; cursor: pointer; color: var(--sub); font-size: 10px;
+      gap: 3px; transition: color .2s; user-select: none;
+    }
+    .nitem.on { color: var(--primary); }
+    .nicon { font-size: 22px; line-height: 1; }
+
+    /* ── MAIN ── */
+    .main { padding: 16px; padding-bottom: calc(var(--nav) + 20px); }
+    .page { animation: fadeUp .2s ease; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card); border-radius: 14px; padding: 16px;
+      margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .section-title {
+      font-size: 12px; font-weight: 700; color: var(--sub);
+      text-transform: uppercase; letter-spacing: .5px; margin: 20px 0 10px;
+    }
+
+    /* ── STAT GRID ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
+    .stat-card { background: #fff; border-radius: 12px; padding: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+    .stat-num { font-size: 26px; font-weight: 800; }
+    .stat-lbl { font-size: 11px; color: var(--sub); margin-top: 2px; }
+
+    /* ── PROGRESS ── */
+    .pbar { background: var(--border); border-radius: 10px; height: 8px; overflow: hidden; margin: 8px 0; }
+    .pfill { height: 100%; background: linear-gradient(90deg,var(--primary-light),var(--accent)); border-radius: 10px; transition: width .5s; }
+
+    /* ── TASK ITEM ── */
+    .titem {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 13px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+    }
+    .titem:last-child { border-bottom: none; }
+    .tcheck {
+      width: 24px; height: 24px; border: 2px solid var(--border); border-radius: 6px;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px;
+      transition: all .2s;
+    }
+    .titem.done .tcheck { background: var(--ok); border-color: var(--ok); }
+    .titem.done .tcheck::after { content: '✓'; color: #fff; font-size: 13px; font-weight: 800; }
+    .titem.done .ttitle { text-decoration: line-through; color: var(--sub); }
+    .tcontent { flex: 1; min-width: 0; }
+    .ttitle { font-size: 14px; line-height: 1.45; margin-bottom: 6px; }
+    .tmeta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+    .badge {
+      display: inline-flex; align-items: center; padding: 2px 9px;
+      border-radius: 10px; font-size: 11px; font-weight: 700;
+    }
+    .ba { background: #fee2e2; color: var(--pa); }
+    .bb { background: #ffedd5; color: var(--pb); }
+    .bc { background: #f1f5f9; color: var(--sub); }
+    .gtag {
+      font-size: 11px; color: var(--sub);
+      background: var(--bg); padding: 2px 8px; border-radius: 8px;
+    }
+
+    /* ── FILTER CHIPS ── */
+    .fscroll {
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
+      margin-bottom: 14px; scrollbar-width: none;
+    }
+    .fscroll::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0; padding: 6px 14px; border-radius: 20px; font-size: 13px;
+      border: 1.5px solid var(--border); background: #fff; color: var(--sub);
+      cursor: pointer; white-space: nowrap; transition: all .18s; user-select: none;
+    }
+    .chip.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+    /* ── GENRE HEADER ── */
+    .genre-hd {
+      display: flex; align-items: center; gap: 8px;
+      padding: 14px 0 8px; font-weight: 700; font-size: 15px;
+    }
+
+    /* ── EMPTY ── */
+    .empty { text-align: center; padding: 40px 20px; color: var(--sub); }
+    .empty-ico { font-size: 40px; margin-bottom: 12px; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: calc(var(--nav) + 20px); left: 50%; transform: translateX(-50%);
+      background: #1e293b; color: #fff; padding: 10px 22px; border-radius: 20px;
+      font-size: 13px; z-index: 999; pointer-events: none; animation: fadeUp .2s ease;
+    }
+
+    /* ── PROGRESS PAGE BARS ── */
+    .gbar-row { margin-bottom: 13px; }
+    .gbar-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+    .gbar-sub { font-size: 12px; color: var(--sub); }
+    .gbar-inner { height: 6px; border-radius: 10px; transition: width .5s; }
+  </style>
+</head>
+<body>
+
+<!-- STAFF SCREEN -->
+<div id="staffScreen">
+  <div style="font-size:40px">💊</div>
+  <h1>RxTask</h1>
+  <p>スタッフを選んでください</p>
+  <div class="staff-grid" id="staffGrid"></div>
+</div>
+
+<!-- HEADER -->
+<div class="header" id="hdr" style="display:none">
+  <div class="logo">Rx<span>Task</span></div>
+  <div class="staff-pill" id="spill" onclick="changeStaff()">---</div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main" style="display:none">
+  <div id="page-home"     class="page"></div>
+  <div id="page-tasks"    class="page" style="display:none">
+    <div class="fscroll" id="pf"></div>
+    <div class="fscroll" id="gf"></div>
+    <div id="tasksBody"></div>
+  </div>
+  <div id="page-mine"     class="page" style="display:none"></div>
+  <div id="page-progress" class="page" style="display:none"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bnav" id="bnav" style="display:none">
+  <div class="nitem on"  onclick="nav('home',this)"><span class="nicon">🏠</span><span>ホーム</span></div>
+  <div class="nitem"     onclick="nav('tasks',this)"><span class="nicon">📋</span><span>タスク</span></div>
+  <div class="nitem"     onclick="nav('mine',this)"><span class="nicon">👤</span><span>マイタスク</span></div>
+  <div class="nitem"     onclick="nav('progress',this)"><span class="nicon">📊</span><span>進捗</span></div>
+</nav>
+
+<script>
+// ═══════════════════════════════ DATA ═══════════════════════════════
+const STAFF = [
+  {id:'takeuchi',  name:'竹内',    role:'管理薬剤師'},
+  {id:'tamura_a',  name:'田村篤史', role:'薬剤師'},
+  {id:'tamura_h',  name:'田村浩',  role:'薬剤師'},
+  {id:'takahashi', name:'高橋',    role:'薬剤師'},
+  {id:'iyoda',     name:'伊與田',  role:'薬剤師'},
+  {id:'ito',       name:'伊藤',    role:'薬剤師'},
+  {id:'yamauchi',  name:'山内',    role:'薬剤師'},
+];
+
+const GENRES = [
+  {id:'routine',   label:'🔄 全員ルーティン',   color:'#6366f1'},
+  {id:'display',   label:'🏪 売場・ディスプレイ', color:'#0ea5e9'},
+  {id:'customer',  label:'💬 接客・トーク',      color:'#10b981'},
+  {id:'product',   label:'📦 商品・サービス',    color:'#f59e0b'},
+  {id:'line',      label:'📱 LINE・デジタル',    color:'#06b6d4'},
+  {id:'sns',       label:'📸 SNS・集客',         color:'#ec4899'},
+  {id:'delivery',  label:'🚚 配達・提携',        color:'#84cc16'},
+  {id:'ops',       label:'📋 業務・在庫',        color:'#6b7280'},
+  {id:'staff',     label:'👥 スタッフ管理',      color:'#8b5cf6'},
+  {id:'price',     label:'💰 価格・販促',        color:'#f97316'},
+  {id:'cx',        label:'🔁 顧客体験',          color:'#14b8a6'},
+  {id:'local',     label:'🏘️ 地域連携',          color:'#78716c'},
+  {id:'health',    label:'📚 健康教育',          color:'#0284c7'},
+  {id:'medical',   label:'🏥 医療連携',          color:'#dc2626'},
+  {id:'beauty',    label:'💄 美容',              color:'#d946ef'},
+  {id:'corporate', label:'🏢 法人向け',          color:'#0f766e'},
+  {id:'data',      label:'📊 データ分析',        color:'#7c3aed'},
+  {id:'cost',      label:'💸 コスト削減',        color:'#b45309'},
+  {id:'seasonal',  label:'📅 季節・イベント',    color:'#16a34a'},
+];
+
+const T = [
+  // ルーティン
+  {id:1,  t:'患者さんの名前を呼ぶ',                          g:'routine',  p:'A', a:['all'], f:'毎回'},
+  {id:2,  t:'お薬手帳の確認「今日お持ちですか？」',           g:'routine',  p:'A', a:['all'], f:'毎回'},
+  {id:3,  t:'処方薬のワンポイント説明（1文）',               g:'routine',  p:'A', a:['all'], f:'毎回'},
+  {id:4,  t:'OTCの追加確認「○○はお持ちですか？」',          g:'routine',  p:'A', a:['all'], f:'毎回'},
+  {id:5,  t:'購入後に「使い方メモ」を手書きで同封',          g:'routine',  p:'A', a:['all'], f:'毎回'},
+  {id:6,  t:'かかりつけ薬剤師への登録を案内',               g:'routine',  p:'A', a:['all'], f:'都度'},
+  {id:7,  t:'GoogleクチコミQRカードを渡す',                  g:'routine',  p:'A', a:['all'], f:'会計後'},
+  {id:8,  t:'引継ぎノートを読む・書く',                      g:'routine',  p:'A', a:['all'], f:'毎日'},
+  {id:9,  t:'期限切れ間近商品をアウトレットへ',              g:'routine',  p:'A', a:['all'], f:'毎日'},
+  {id:10, t:'「今日のおすすめ1品」POPを設置・確認',          g:'routine',  p:'A', a:['all'], f:'毎日'},
+  {id:11, t:'「今週の推し商品」をLINEで確認（月曜）',        g:'routine',  p:'A', a:['all'], f:'毎週'},
+  {id:12, t:'「うまくいった接客」をLINEグループに投稿',      g:'routine',  p:'A', a:['all'], f:'毎週'},
+  // 売場
+  {id:101,t:'入口ドアに入店チャイム（鈴）設置',              g:'display',  p:'A', a:['takeuchi']},
+  {id:102,t:'「薬剤師イチ推し商品」POP設置（持ち回り）',     g:'display',  p:'A', a:['yamauchi']},
+  {id:103,t:'「今週のイチオシ」特設コーナー設置',            g:'display',  p:'A', a:['tamura_a']},
+  {id:104,t:'今の季節に合わせた特集コーナー（熱中症）',      g:'display',  p:'A', a:['takahashi']},
+  {id:105,t:'睡眠・ストレス対応商品の深夜コーナー強化',      g:'display',  p:'A', a:['takahashi']},
+  {id:106,t:'即効性OTCコーナー（夜間来店者向け）',           g:'display',  p:'A', a:['takahashi']},
+  {id:107,t:'症状別「迷ったらこれ」帯コーナー設置',          g:'display',  p:'A', a:['takeuchi']},
+  {id:108,t:'夏向け熱中症・虫刺されキット特設展開（準備）',  g:'display',  p:'B', a:['takahashi']},
+  {id:109,t:'季節テーマ展示の月次ローテーション',            g:'display',  p:'B', a:['takahashi']},
+  {id:110,t:'棚の高さ別ゾーン分け（子供向け・高齢者向け）',  g:'display',  p:'B', a:['takeuchi']},
+  {id:111,t:'「一緒に買われる商品」隣接陳列',                g:'display',  p:'B', a:['takahashi']},
+  {id:112,t:'薬剤師の顔写真＋一言コメントPOP',              g:'display',  p:'B', a:['takeuchi']},
+  {id:113,t:'ジェネリックコーナーの強化・特集',              g:'display',  p:'B', a:['takeuchi']},
+  {id:114,t:'棚ラベル・価格表示の統一・刷新',               g:'display',  p:'B', a:['tamura_a']},
+  {id:115,t:'サンプル・試供品コーナーの常設',               g:'display',  p:'B', a:['iyoda']},
+  {id:116,t:'商品の「使い切り期間」表示ラベル貼付',          g:'display',  p:'C', a:['tamura_a']},
+  // 接客
+  {id:201,t:'処方箋受付時のOTC確認声かけ徹底',              g:'customer', p:'A', a:['all']},
+  {id:202,t:'スマレジ来店履歴で「久しぶりですね」声かけ',    g:'customer', p:'A', a:['all']},
+  {id:203,t:'処方箋受付後のOTC追加提案スクリプト作成',       g:'customer', p:'A', a:['takeuchi']},
+  {id:204,t:'かかりつけ薬剤師制度の登録促進',               g:'customer', p:'A', a:['all']},
+  {id:205,t:'美容点滴成分OTC訴求の接客',                    g:'customer', p:'A', a:['ito']},
+  {id:206,t:'症状別3段階提案マニュアルの作成・活用',         g:'customer', p:'B', a:['takeuchi']},
+  {id:207,t:'「今月のおすすめ1分トーク」全スタッフ統一',     g:'customer', p:'B', a:['takeuchi']},
+  {id:208,t:'「この薬、何週間で効果？」FAQ作成',             g:'customer', p:'B', a:['takeuchi']},
+  {id:209,t:'長期処方患者への中間フォロー連絡',              g:'customer', p:'B', a:['ito']},
+  {id:210,t:'初来店「店内ガイドカード」を渡す',              g:'customer', p:'B', a:['takeuchi']},
+  {id:211,t:'「また来てください」カードの手渡し',            g:'customer', p:'B', a:['takeuchi']},
+  {id:212,t:'処方箋持参者に「次回もこちらへ」カードを渡す',  g:'customer', p:'B', a:['takeuchi']},
+  // 商品
+  {id:301,t:'飲酒後ケアセット（胃腸薬＋ビタミン）パック作成', g:'product', p:'A', a:['takeuchi','iyoda']},
+  {id:302,t:'二日酔い対策セットのまとめ売り',               g:'product',  p:'A', a:['takeuchi']},
+  {id:303,t:'美容セット作成（グルタチオン・ビタミンC等）',   g:'product',  p:'A', a:['takeuchi','ito']},
+  {id:304,t:'「夜間ならでは」深夜・早朝限定サービス開発',    g:'product',  p:'B', a:['takeuchi']},
+  {id:305,t:'「仕事帰りに解決」1分相談サービスの告知',       g:'product',  p:'B', a:['takeuchi']},
+  {id:306,t:'スポーツ向けサプリ・プロテインコーナー新設',    g:'product',  p:'B', a:['takeuchi']},
+  {id:307,t:'旅行・出張向け「持ち歩き薬セット」販売',        g:'product',  p:'B', a:['takeuchi','iyoda']},
+  {id:308,t:'外国語対応薬袋（英語・中国語）の導入',          g:'product',  p:'B', a:['takeuchi']},
+  {id:309,t:'UV対策パーフェクトセット（春季限定バンドル）',  g:'product',  p:'B', a:['takeuchi','iyoda']},
+  // LINE
+  {id:401,t:'LINE友だち登録QRコードを店頭・レジ横に設置',    g:'line',     p:'A', a:['takeuchi']},
+  {id:402,t:'LINE配信の曜日・時間帯の最適化',               g:'line',     p:'B', a:['takeuchi']},
+  {id:403,t:'LINEリッチメニューの刷新',                     g:'line',     p:'B', a:['takeuchi','yamauchi']},
+  {id:404,t:'LINEポイントカード機能の導入',                  g:'line',     p:'B', a:['takeuchi']},
+  {id:405,t:'LINE限定「夜間特別価格」の案内',               g:'line',     p:'B', a:['takeuchi']},
+  {id:406,t:'「今夜おすすめ1品」を毎晩19時に配信',           g:'line',     p:'B', a:['takeuchi']},
+  {id:407,t:'常連客に誕生月クーポンをLINEで送付',           g:'line',     p:'B', a:['takeuchi']},
+  {id:408,t:'前回購入商品フォローアップLINE',               g:'line',     p:'B', a:['takeuchi']},
+  {id:409,t:'薬剤師監修「健康コラム」をLINEで週1配信',       g:'line',     p:'B', a:['takeuchi','yamauchi']},
+  // SNS
+  {id:501,t:'Instagram「薬剤師の一日」ストーリー投稿スタート', g:'sns',    p:'A', a:['yamauchi']},
+  {id:502,t:'GoogleマップクチコミQRカード作成・配布',         g:'sns',    p:'A', a:['takeuchi']},
+  {id:503,t:'Googleビジネスプロフィールの写真・情報更新',     g:'sns',    p:'A', a:['yamauchi']},
+  {id:504,t:'「夜だから起きる症状」テーマのInstagram投稿',    g:'sns',    p:'A', a:['yamauchi']},
+  {id:505,t:'Google検索「六本木薬局」表示情報の充実',        g:'sns',    p:'A', a:['yamauchi']},
+  {id:506,t:'InstagramのFAQハイライト整備',                  g:'sns',    p:'B', a:['yamauchi']},
+  {id:507,t:'TikTok「薬剤師あるある」動画',                  g:'sns',    p:'B', a:['yamauchi']},
+  {id:508,t:'YouTube/TikTok短尺動画「薬剤師が教える○○」',   g:'sns',    p:'B', a:['yamauchi']},
+  {id:509,t:'ピル相談実績のSNS発信',                         g:'sns',    p:'B', a:['yamauchi','ito']},
+  {id:510,t:'Googleビジネスプロフィールのインサイト月次確認', g:'sns',    p:'B', a:['yamauchi']},
+  // 配達・提携
+  {id:601,t:'近隣クリニック・診療所へのFAX・DM送付',         g:'delivery', p:'B', a:['takeuchi']},
+  {id:602,t:'近隣ホテルのフロントにパンフ設置',              g:'delivery', p:'B', a:['takeuchi']},
+  {id:603,t:'居酒屋・バーへの深夜薬局カード設置交渉',        g:'delivery', p:'B', a:['takeuchi']},
+  {id:604,t:'提携院向け「処方箋受付スムーズ化」案内書作成',  g:'delivery', p:'B', a:['takeuchi']},
+  {id:605,t:'近隣クリニック待合に置き型パンフを設置',        g:'delivery', p:'B', a:['takeuchi']},
+  {id:606,t:'配達サービスの対応エリア拡大検討',              g:'delivery', p:'C', a:['takeuchi']},
+  {id:607,t:'「夜間配達」対応の試験的導入',                  g:'delivery', p:'C', a:['takeuchi']},
+  // 業務・在庫
+  {id:701,t:'店舗清掃ルールの作成・周知・実施確認',          g:'ops', p:'A', a:['takeuchi']},
+  {id:702,t:'キーボックス管理ルールの作成・周知',            g:'ops', p:'A', a:['takeuchi']},
+  {id:703,t:'発注点スマレジ登録（全商品）',                  g:'ops', p:'A', a:['takeuchi','tamura_a']},
+  {id:704,t:'使用期限管理・先出し徹底',                      g:'ops', p:'A', a:['tamura_a']},
+  {id:705,t:'シフト引継ぎ共有ノートの運用開始',              g:'ops', p:'A', a:['takeuchi']},
+  {id:706,t:'期限切れ間近商品をアウトレットへ移動（日次）',  g:'ops', p:'A', a:['tamura_a']},
+  {id:707,t:'処方箋FAX受付案内POPの作成・設置',              g:'ops', p:'B', a:['takeuchi']},
+  {id:708,t:'スマレジ日次・週次レポートの自動化',            g:'ops', p:'B', a:['takeuchi']},
+  {id:709,t:'在庫「見える化」ボードの作成',                  g:'ops', p:'B', a:['takeuchi']},
+  {id:710,t:'発注ミス防止ダブルチェック体制の構築',          g:'ops', p:'B', a:['takeuchi']},
+  {id:711,t:'業者との価格交渉（月1回）',                     g:'ops', p:'B', a:['takeuchi']},
+  {id:712,t:'棚割りの定期見直し（四半期）',                  g:'ops', p:'B', a:['takeuchi','takahashi']},
+  {id:713,t:'不動在庫の問屋返品交渉',                        g:'ops', p:'B', a:['takeuchi']},
+  // スタッフ管理
+  {id:801,t:'「今週の推し商品」を毎週月曜にLINEで全スタッフへ共有', g:'staff', p:'A', a:['takeuchi']},
+  {id:802,t:'空き時間タスクリスト作成・常備',                g:'staff', p:'A', a:['takeuchi']},
+  {id:803,t:'「うまくいった接客事例」をLINEで共有する文化づくり', g:'staff', p:'A', a:['takeuchi']},
+  {id:804,t:'新商品入荷時の15分スタッフ勉強会',              g:'staff', p:'B', a:['takeuchi']},
+  {id:805,t:'スタッフ個人の「得意商品」1人1品制度化',        g:'staff', p:'B', a:['takeuchi']},
+  {id:806,t:'接客ロールプレイ（月1回）',                     g:'staff', p:'B', a:['takeuchi','ito']},
+  {id:807,t:'スタッフ推し商品をPOP付きで展開する制度',       g:'staff', p:'B', a:['takeuchi']},
+  {id:808,t:'かかりつけ薬剤師制度理解研修',                  g:'staff', p:'B', a:['takeuchi']},
+  {id:809,t:'スタッフ社割制度（商品の試用）',                g:'staff', p:'B', a:['takeuchi']},
+  // 価格・販促
+  {id:901,t:'まとめ買い割引（3個以上5%OFF）スマレジ設定',    g:'price', p:'B', a:['takeuchi']},
+  {id:902,t:'夜限定価格の設定（23時以降）',                  g:'price', p:'B', a:['takeuchi']},
+  {id:903,t:'ポイント2倍デーの設定（週1回）',                g:'price', p:'B', a:['takeuchi']},
+  {id:904,t:'「今日だけ特価」週次サプライズプロモーション',   g:'price', p:'B', a:['takeuchi']},
+  {id:905,t:'処方箋持参者へのOTCクーポン同封',               g:'price', p:'B', a:['takeuchi']},
+  {id:906,t:'雨の日限定割引のスマレジ設定',                  g:'price', p:'B', a:['takeuchi']},
+  // 顧客体験
+  {id:1001,t:'「かかりつけ薬局カード」の発行',               g:'cx', p:'B', a:['takeuchi']},
+  {id:1002,t:'待合スペースに無料Wi-Fi設置',                  g:'cx', p:'B', a:['takeuchi']},
+  {id:1003,t:'処方箋待ち時間に血圧・体温測定無料提供',       g:'cx', p:'B', a:['ito']},
+  {id:1004,t:'「初めてのお客様」向け店内案内カード作成',      g:'cx', p:'B', a:['takeuchi']},
+  {id:1005,t:'店内BGMを季節に合わせて変更',                  g:'cx', p:'B', a:['yamauchi']},
+  {id:1006,t:'会計待ち中に見られる「健康豆知識カード」',      g:'cx', p:'B', a:['iyoda']},
+  {id:1007,t:'リピーター向けまとめ買い割引',                 g:'cx', p:'B', a:['takeuchi']},
+  // 地域連携
+  {id:1101,t:'近隣マンション掲示板へのチラシ掲出',           g:'local', p:'B', a:['takeuchi','tamura_a']},
+  {id:1102,t:'近隣オフィスビルへの法人向けサービス案内配布', g:'local', p:'B', a:['takeuchi','tamura_a']},
+  {id:1103,t:'近隣ジム・ヨガスタジオへのサプリサンプル提供', g:'local', p:'B', a:['takeuchi','iyoda']},
+  {id:1104,t:'地域SNSグループへの情報投稿',                  g:'local', p:'B', a:['yamauchi']},
+  {id:1105,t:'近隣クリニックへの定期訪問（月1回）',          g:'local', p:'B', a:['takeuchi']},
+  // 健康教育
+  {id:1201,t:'飲み合わせチェックサービスの告知強化（POP＋LINE）', g:'health', p:'A', a:['takeuchi']},
+  {id:1202,t:'月1回「薬の正しい飲み方」ミニ講座（10分）',    g:'health', p:'B', a:['takahashi','ito']},
+  {id:1203,t:'疾患別「知っておきたい薬の知識」リーフレット作成', g:'health', p:'B', a:['tamura_h']},
+  {id:1204,t:'「ジェネリックって何が違う？」疑問答えコーナー', g:'health', p:'B', a:['tamura_h','tamura_a']},
+  {id:1205,t:'「処方薬の副作用Q&A」カードをお薬袋に同封',   g:'health', p:'B', a:['takeuchi']},
+  // 医療連携
+  {id:1301,t:'処方箋FAX受付案内POPの作成・設置',             g:'medical', p:'A', a:['takeuchi']},
+  {id:1302,t:'処方箋WEB送信サービスの導入検討',              g:'medical', p:'B', a:['takeuchi']},
+  {id:1303,t:'退院後フォローサービスの告知',                 g:'medical', p:'C', a:['takeuchi']},
+  {id:1304,t:'在宅訪問薬剤管理指導の積極開拓',              g:'medical', p:'C', a:['takeuchi']},
+  // 美容
+  {id:1401,t:'美容セット作成（グルタチオン・ビタミンC・コラーゲン等）', g:'beauty', p:'A', a:['takeuchi','ito']},
+  {id:1402,t:'「グルタチオン・ビタミンCをOTCで摂る」訴求接客', g:'beauty', p:'A', a:['ito']},
+  {id:1403,t:'「美容相談コーナー」週1回設置（曜日固定）',    g:'beauty', p:'B', a:['ito']},
+  {id:1404,t:'インバウンド向け日本製スキンケアブランド特集', g:'beauty', p:'B', a:['takeuchi','yamauchi']},
+  {id:1405,t:'ドクターズコスメの取り扱い拡充',              g:'beauty', p:'B', a:['takeuchi']},
+  // 法人
+  {id:1501,t:'近隣企業の「常備薬補充」定期契約サービス開始', g:'corporate', p:'B', a:['takeuchi']},
+  {id:1502,t:'ホテル・旅館向け「アメニティ薬品セット」卸販売', g:'corporate', p:'B', a:['takeuchi']},
+  {id:1503,t:'近隣飲食店・サービス業向けスタッフ割引カード発行', g:'corporate', p:'B', a:['takeuchi']},
+  {id:1504,t:'外国人従業員向け多言語対応薬案内書作成',      g:'corporate', p:'B', a:['takeuchi']},
+  // データ
+  {id:1601,t:'スマレジ客層分類の整備・接客ルール化',         g:'data', p:'A', a:['takeuchi']},
+  {id:1602,t:'スマレジ時間帯別売上分析→スタッフ配置最適化', g:'data', p:'B', a:['takeuchi']},
+  {id:1603,t:'「売れ筋TOP10」月次集計→発注・陳列に反映',    g:'data', p:'B', a:['takeuchi']},
+  {id:1604,t:'購買データから「一緒に買われる商品」隣接陳列', g:'data', p:'B', a:['takeuchi']},
+  {id:1605,t:'LINE配信の開封率・クリック率の月次レビュー',   g:'data', p:'B', a:['takeuchi']},
+  {id:1606,t:'客単価の週次モニタリング',                     g:'data', p:'B', a:['takeuchi']},
+  {id:1607,t:'顧客満足度アンケート（四半期）',               g:'data', p:'B', a:['ito']},
+  // コスト削減
+  {id:1701,t:'仕入れ先の相見積もり取得',                    g:'cost', p:'B', a:['takeuchi']},
+  {id:1702,t:'広告費の費用対効果測定',                       g:'cost', p:'B', a:['takeuchi']},
+  {id:1703,t:'メーカーの販促支援（什器・POP・サンプル）積極活用', g:'cost', p:'B', a:['takeuchi']},
+  // 季節
+  {id:1801,t:'夏向け熱中症・虫刺されキット特設展開（準備開始）', g:'seasonal', p:'A', a:['takeuchi','takahashi']},
+  {id:1802,t:'秋：免疫対策フェア（ビタミンD・乳酸菌特集）', g:'seasonal', p:'C', a:['takeuchi']},
+  {id:1803,t:'年末：「お正月に備える常備薬セット」',         g:'seasonal', p:'C', a:['takeuchi']},
+  {id:1804,t:'インフルエンザシーズン前の予防対策セット早期告知', g:'seasonal', p:'C', a:['takeuchi']},
+  {id:1805,t:'花粉症シーズン「症状別相談カウンター」（1〜4月）', g:'seasonal', p:'C', a:['takeuchi']},
+];
+
+// ═══════════════════════════════ STATE ═══════════════════════════════
+let staff    = localStorage.getItem('rx_staff') || null;
+let done     = JSON.parse(localStorage.getItem('rx_done') || '[]');
+let curPage  = 'home';
+let pFil     = 'all';
+let gFil     = 'all';
+
+// ═══════════════════════════════ STAFF ═══════════════════════════════
+function initStaff() {
+  document.getElementById('staffGrid').innerHTML =
+    STAFF.map(s => `<div class="staff-btn" onclick="pickStaff('${s.id}','${s.name}')">
+      <div class="sname">${s.name}</div><div class="srole">${s.role}</div>
+    </div>`).join('');
+}
+function pickStaff(id, name) {
+  staff = id;
+  localStorage.setItem('rx_staff', id);
+  document.getElementById('staffScreen').style.display = 'none';
+  document.getElementById('hdr').style.display  = 'flex';
+  document.getElementById('main').style.display = 'block';
+  document.getElementById('bnav').style.display = 'flex';
+  document.getElementById('spill').textContent  = name + ' さん';
+  buildGenreFilter();
+  render('home');
+}
+function changeStaff() { document.getElementById('staffScreen').style.display = 'flex'; }
+
+// ═══════════════════════════════ NAV ═══════════════════════════════
+function nav(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.nitem').forEach(n => n.classList.remove('on'));
+  document.getElementById('page-' + page).style.display = 'block';
+  el.classList.add('on');
+  curPage = page;
+  render(page);
+}
+function render(p) {
+  if (p === 'home')     renderHome();
+  if (p === 'tasks')    renderTasks();
+  if (p === 'mine')     renderMine();
+  if (p === 'progress') renderProgress();
+}
+
+// ═══════════════════════════════ HELPERS ═══════════════════════════════
+const isDone  = id  => done.includes(id);
+const getG    = id  => GENRES.find(g => g.id === id) || {label:id, color:'#888'};
+const myTasks = ()  => T.filter(t => t.a.includes(staff) || t.a.includes('all'));
+
+function toggle(id) {
+  if (isDone(id)) done = done.filter(x => x !== id);
+  else { done.push(id); toast('完了しました ✓'); }
+  localStorage.setItem('rx_done', JSON.stringify(done));
+  render(curPage);
+}
+
+function taskHTML(t) {
+  const d = isDone(t.id);
+  const g = getG(t.g);
+  const bc = t.p === 'A' ? 'ba' : t.p === 'B' ? 'bb' : 'bc';
+  return `<div class="titem ${d?'done':''}" onclick="toggle(${t.id})">
+    <div class="tcheck"></div>
+    <div class="tcontent">
+      <div class="ttitle">${t.t}</div>
+      <div class="tmeta">
+        <span class="badge ${bc}">優先${t.p}</span>
+        <span class="gtag">${g.label}</span>
+        ${t.f ? `<span class="gtag">🕐 ${t.f}</span>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════ HOME ═══════════════════════════════
+function renderHome() {
+  const my    = myTasks();
+  const aOpen = my.filter(t => t.p === 'A' && !isDone(t.id));
+  const dCnt  = my.filter(t => isDone(t.id)).length;
+  const pct   = my.length ? Math.round(dCnt / my.length * 100) : 0;
+  const sname = STAFF.find(s => s.id === staff)?.name || '';
+
+  document.getElementById('page-home').innerHTML = `
+    <div class="card">
+      <div style="font-size:13px;color:var(--sub);margin-bottom:4px">おはようございます</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:16px">${sname} さん</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <span style="font-size:13px;color:var(--sub)">全体進捗</span>
+        <span style="font-size:14px;font-weight:800;color:var(--primary)">${pct}%</span>
+      </div>
+      <div class="pbar"><div class="pfill" style="width:${pct}%"></div></div>
+      <div style="font-size:12px;color:var(--sub);margin-top:6px">${dCnt} / ${my.length} タスク完了</div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num" style="color:var(--pa)">${my.filter(t=>t.p==='A').length}</div><div class="stat-lbl">優先A</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--pb)">${my.filter(t=>t.p==='B').length}</div><div class="stat-lbl">優先B</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--pc)">${my.filter(t=>t.p==='C').length}</div><div class="stat-lbl">優先C</div></div>
+    </div>
+    <div class="section-title">🔴 今すぐやること（優先A）</div>
+    ${aOpen.length
+      ? `<div class="card">${aOpen.map(taskHTML).join('')}</div>`
+      : `<div class="empty"><div class="empty-ico">🎉</div><div>優先Aタスクはすべて完了です！</div></div>`}
+  `;
+}
+
+// ═══════════════════════════════ TASKS ═══════════════════════════════
+function buildGenreFilter() {
+  document.getElementById('pf').innerHTML =
+    ['all','A','B','C'].map((v,i) =>
+      `<div class="chip ${v==='all'?'on':''}" onclick="setPF('${v}',this)">${
+        v==='all'?'すべて': v==='A'?'🔴 優先A': v==='B'?'🟡 優先B':'⚪ 優先C'
+      }</div>`).join('');
+  document.getElementById('gf').innerHTML =
+    `<div class="chip on" onclick="setGF('all',this)">すべて</div>` +
+    GENRES.map(g => `<div class="chip" onclick="setGF('${g.id}',this)">${g.label}</div>`).join('');
+}
+function setPF(v, el) {
+  pFil = v;
+  document.querySelectorAll('#pf .chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on'); renderTasks();
+}
+function setGF(v, el) {
+  gFil = v;
+  document.querySelectorAll('#gf .chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on'); renderTasks();
+}
+function renderTasks() {
+  let list = T;
+  if (pFil !== 'all') list = list.filter(t => t.p === pFil);
+  if (gFil !== 'all') list = list.filter(t => t.g === gFil);
+  const byG = {};
+  list.forEach(t => { if (!byG[t.g]) byG[t.g] = []; byG[t.g].push(t); });
+  document.getElementById('tasksBody').innerHTML =
+    Object.entries(byG).map(([gid, tasks]) =>
+      `<div class="genre-hd">${getG(gid).label}</div>
+       <div class="card">${tasks.map(taskHTML).join('')}</div>`
+    ).join('') || `<div class="empty"><div class="empty-ico">🔍</div><div>該当するタスクがありません</div></div>`;
+}
+
+// ═══════════════════════════════ MINE ═══════════════════════════════
+function renderMine() {
+  const my = myTasks();
+  const byP = {A:[], B:[], C:[]};
+  my.forEach(t => byP[t.p]?.push(t));
+  const lbl = {A:'🔴 優先A（今すぐ）', B:'🟡 優先B（今月〜来月）', C:'⚪ 優先C（中長期）'};
+  document.getElementById('page-mine').innerHTML =
+    ['A','B','C'].map(p => !byP[p].length ? '' :
+      `<div class="section-title">${lbl[p]}</div>
+       <div class="card">${byP[p].map(taskHTML).join('')}</div>`
+    ).join('');
+}
+
+// ═══════════════════════════════ PROGRESS ═══════════════════════════════
+function renderProgress() {
+  const total = T.length;
+  const dCnt  = done.length;
+  const pct   = Math.round(dCnt / total * 100);
+  const bars  = GENRES.map(g => {
+    const gt = T.filter(t => t.g === g.id);
+    const gd = gt.filter(t => isDone(t.id)).length;
+    const gp = gt.length ? Math.round(gd / gt.length * 100) : 0;
+    return {g, total:gt.length, done:gd, pct:gp};
+  }).filter(x => x.total > 0);
+
+  document.getElementById('page-progress').innerHTML = `
+    <div class="card" style="text-align:center;padding:24px 16px">
+      <div style="font-size:52px;font-weight:900;color:var(--primary)">${pct}%</div>
+      <div style="color:var(--sub);margin-top:4px;font-size:14px">全体完了率</div>
+      <div class="pbar" style="margin-top:16px"><div class="pfill" style="width:${pct}%"></div></div>
+      <div style="font-size:13px;color:var(--sub);margin-top:8px">${dCnt} / ${total} タスク完了</div>
+    </div>
+    <div class="section-title">ジャンル別進捗</div>
+    <div class="card">
+      ${bars.map(x => `
+        <div class="gbar-row">
+          <div class="gbar-top">
+            <span style="font-size:13px">${x.g.label}</span>
+            <span class="gbar-sub">${x.done}/${x.total}</span>
+          </div>
+          <div class="pbar" style="height:6px">
+            <div class="gbar-inner" style="width:${x.pct}%;background:${x.g.color}"></div>
+          </div>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+// ═══════════════════════════════ TOAST ═══════════════════════════════
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1800);
+}
+
+// ═══════════════════════════════ INIT ═══════════════════════════════
+initStaff();
+if (staff) {
+  const s = STAFF.find(x => x.id === staff);
+  if (s) pickStaff(s.id, s.name);
+}
+</script>
+</body>
+</html>
