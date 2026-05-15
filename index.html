@@ -1320,8 +1320,14 @@ function openCiDetail(type) {
         <div class="tcontent"><div class="ttitle">${ci.t}</div></div>
       </div>`;
     }).join('') +
-    `<div style="margin-top:24px"><button class="btn btn-primary" onclick="closeOverlay('ciOverlay');renderCheckIn()">閉じる</button></div>`;
+    `<div style="margin-top:24px"><button class="btn btn-primary" onclick="closeCiOverlay()">閉じる</button></div>`;
+  document.getElementById('dashScreen').style.display = 'none';
   document.getElementById('ciOverlay').style.display = 'flex';
+}
+function closeCiOverlay() {
+  document.getElementById('ciOverlay').style.display = 'none';
+  document.getElementById('dashScreen').style.display = 'flex';
+  renderCheckIn();
 }
 
 async function toggleCheckIn(type, itemId) {
