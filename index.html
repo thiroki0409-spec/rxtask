@@ -1267,6 +1267,41 @@ function renderCheckIn() {
       </div>
     </div>
     <p style="font-size:12px;color:var(--sub);text-align:center">タップして各業務のチェックリストを開く</p>
+    ${renderCheckInHistory()}
+  `;
+}
+
+function renderCheckInHistory() {
+  const dates = Object.keys(checkIns).sort().reverse();
+  if (dates.length === 0) return '';
+
+  const rows = dates.slice(0, 30).map(d => {
+    const ci = checkIns[d] || {};
+    const openDone  = OPEN_ITEMS.filter(x => ci.open?.[x.id]).length;
+    const closeDone = CLOSE_ITEMS.filter(x => ci.close?.[x.id]).length;
+    const openAll   = openDone  === OPEN_ITEMS.length;
+    const closeAll  = closeDone === CLOSE_ITEMS.length;
+    const isToday   = d === TODAY();
+
+    // 日付を読みやすく
+    const [y, m, day] = d.split('-');
+    const dow = '日月火水木金土'[new Date(d).getDay()];
+    const label = isToday ? `今日（${m}/${day}・${dow}）` : `${m}/${day}（${dow}）`;
+
+    return `<div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);gap:10px">
+      <div style="font-size:13px;font-weight:${isToday?'800':'500'};flex:1;color:${isToday?'var(--primary)':'var(--text)'}">${label}</div>
+      <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;background:${openAll?'#dcfce7':'#fef9c3'};color:${openAll?'#16a34a':'#a16207'}">
+        🌅 ${openDone}/${OPEN_ITEMS.length}
+      </span>
+      <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;background:${closeAll?'#dcfce7':'#f1f5f9'};color:${closeAll?'#16a34a':'var(--sub)'}">
+        🌙 ${closeDone}/${CLOSE_ITEMS.length}
+      </span>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="section-title" style="margin-top:24px">📅 過去の履歴</div>
+    <div class="card" style="padding:0 16px">${rows}</div>
   `;
 }
 
