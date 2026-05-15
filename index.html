@@ -189,15 +189,92 @@
 
     .hidden { display: none !important; }
     .rel { position: relative; }
+
+    /* ── DASHBOARD ── */
+    #dashScreen { background: var(--bg); flex-direction: column; overflow-y: auto; }
+    .dash-header { background: var(--primary); color:#fff; padding: 20px 18px; padding-top: calc(20px + env(safe-area-inset-top)); }
+    .dash-header h2 { font-size: 20px; font-weight: 800; margin-bottom: 2px; }
+    .dash-header .dash-date { font-size: 13px; color: rgba(255,255,255,.65); }
+    .dash-tabs { display: flex; background: #fff; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; position: sticky; top: 0; z-index: 5; }
+    .dash-tabs::-webkit-scrollbar { display: none; }
+    .dtab { flex-shrink: 0; padding: 14px 16px; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; border-bottom: 2px solid transparent; transition: .2s; white-space: nowrap; }
+    .dtab.on { color: var(--primary); border-bottom-color: var(--primary); }
+    .dash-body { padding: 16px; padding-bottom: 100px; flex: 1; }
+    .dash-footer { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: #fff; border-top: 1px solid var(--border); padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); display: flex; gap: 10px; z-index: 10; }
+
+    /* ── CHECK-IN ── */
+    .ci-staff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .ci-staff-card { background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.06); cursor: pointer; transition: .15s; border: 2px solid transparent; }
+    .ci-staff-card:active { transform: scale(.97); }
+    .ci-staff-card.all-done { border-color: var(--ok); }
+    .ci-staff-name { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .ci-staff-role { font-size: 11px; color: var(--sub); margin-bottom: 10px; }
+    .ci-progress { font-size: 12px; color: var(--sub); }
+    .ci-check-icon { font-size: 22px; float: right; margin-top: -4px; }
+
+    /* ── NEWS ── */
+    .news-card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .news-card.important { border-left: 4px solid var(--pa); }
+    .news-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .news-meta { font-size: 11px; color: var(--sub); margin-bottom: 10px; }
+    .news-body { font-size: 13px; line-height: 1.6; color: var(--text); margin-bottom: 12px; white-space: pre-wrap; }
+    .news-readers { display: flex; flex-wrap: wrap; gap: 6px; }
+    .reader-chip { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; transition: .15s; }
+    .reader-chip.read { background: var(--ok); color: #fff; }
+    .reader-chip.unread { background: var(--border); color: var(--sub); }
+
+    /* ── MANUAL ── */
+    .manual-card { background: #fff; border-radius: 14px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden; }
+    .manual-header { padding: 14px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .manual-title { font-size: 14px; font-weight: 700; flex: 1; }
+    .manual-cat { font-size: 11px; background: var(--bg); color: var(--sub); padding: 2px 8px; border-radius: 8px; }
+    .manual-body { padding: 0 16px 14px; font-size: 13px; line-height: 1.7; color: var(--text); white-space: pre-wrap; display: none; border-top: 1px solid var(--border); padding-top: 12px; }
+    .manual-body.open { display: block; }
+    .manual-chevron { font-size: 14px; color: var(--sub); transition: transform .2s; }
+    .manual-chevron.open { transform: rotate(180deg); }
   </style>
 </head>
 <body>
+
+<!-- ═══ SHARED DASHBOARD ═══ -->
+<div class="fullscreen" id="dashScreen" style="display:none; justify-content:flex-start; padding:0; background:var(--bg);">
+  <div class="dash-header">
+    <h2>六本木漢方薬局</h2>
+    <div class="dash-date" id="dashDate"></div>
+  </div>
+  <div class="dash-tabs">
+    <div class="dtab on"  id="dtab-checkin" onclick="switchDashTab('checkin')">✅ 入店チェック</div>
+    <div class="dtab"     id="dtab-news"    onclick="switchDashTab('news')">📣 お知らせ</div>
+    <div class="dtab"     id="dtab-manual"  onclick="switchDashTab('manual')">📖 マニュアル</div>
+  </div>
+  <div class="dash-body">
+    <div id="dash-checkin"></div>
+    <div id="dash-news"   style="display:none"></div>
+    <div id="dash-manual" style="display:none"></div>
+  </div>
+  <div class="dash-footer">
+    <button class="btn btn-primary" style="flex:1" onclick="openStaffScreen()">👤 個人タスク管理</button>
+    <button class="btn" style="background:var(--border);color:var(--sub);flex:0 0 auto;width:auto;padding:14px 16px;font-size:13px" onclick="syncFromCloud();toast('同期しました')">🔄</button>
+  </div>
+</div>
+
+<!-- ═══ CHECK-IN DETAIL OVERLAY ═══ -->
+<div class="overlay" id="ciOverlay">
+  <div class="overlay-header">
+    <button class="back-btn" onclick="closeOverlay('ciOverlay')">✕</button>
+    <h2 id="ciOverlayTitle">入店チェック</h2>
+  </div>
+  <div class="overlay-body" id="ciOverlayBody"></div>
+</div>
 
 <!-- ═══ STAFF SCREEN ═══ -->
 <div class="fullscreen" id="staffScreen">
   <h1>六本木漢方薬局タスク管理ツール</h1>
   <p>スタッフを選んでください</p>
   <div class="staff-grid" id="staffGrid"></div>
+  <button onclick="openDash()" style="margin-top:20px;background:none;border:1.5px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:10px 24px;border-radius:10px;font-size:13px;cursor:pointer;">
+    📊 共通ダッシュボード
+  </button>
 </div>
 
 <!-- ═══ HEADER ═══ -->
@@ -298,7 +375,9 @@
     <div class="atab on"  id="atab-proposals" onclick="switchAdminTab('proposals')">📬 提案 <span id="propCount"></span></div>
     <div class="atab"     id="atab-add"       onclick="switchAdminTab('add')">➕ 追加</div>
     <div class="atab"     id="atab-tasks"     onclick="switchAdminTab('tasks')">📋 管理</div>
-    <div class="atab"     id="atab-progress"  onclick="switchAdminTab('progress')">📊 スタッフ進捗</div>
+    <div class="atab"     id="atab-news"      onclick="switchAdminTab('news')">📣 お知らせ</div>
+    <div class="atab"     id="atab-manual"    onclick="switchAdminTab('manual')">📖 マニュアル</div>
+    <div class="atab"     id="atab-progress"  onclick="switchAdminTab('progress')">📊 進捗</div>
   </div>
   <div class="overlay-body">
     <!-- Proposals Tab -->
@@ -329,6 +408,42 @@
     </div>
     <!-- Tasks Tab -->
     <div id="admin-tasks" style="display:none"></div>
+    <!-- News Tab -->
+    <div id="admin-news" style="display:none">
+      <div class="form-group">
+        <label class="form-label">タイトル *</label>
+        <input class="form-input" id="newsTitle" placeholder="お知らせのタイトル" maxlength="60">
+      </div>
+      <div class="form-group">
+        <label class="form-label">内容 *</label>
+        <textarea class="form-input form-textarea" id="newsBody" placeholder="スタッフへの連絡内容" style="height:100px"></textarea>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="newsImportant" style="width:18px;height:18px">
+        <label for="newsImportant" style="font-size:14px;font-weight:600;cursor:pointer">⚠️ 重要なお知らせ</label>
+      </div>
+      <button class="btn btn-primary" onclick="postNews()">投稿する</button>
+      <div class="section-title" style="margin-top:24px">投稿済みお知らせ</div>
+      <div id="admin-news-list"></div>
+    </div>
+    <!-- Manual Tab -->
+    <div id="admin-manual" style="display:none">
+      <div class="form-group">
+        <label class="form-label">タイトル *</label>
+        <input class="form-input" id="manualTitle" placeholder="マニュアルのタイトル" maxlength="60">
+      </div>
+      <div class="form-group">
+        <label class="form-label">カテゴリ</label>
+        <input class="form-input" id="manualCat" placeholder="例：接客・レジ・在庫管理" maxlength="20">
+      </div>
+      <div class="form-group">
+        <label class="form-label">内容 *</label>
+        <textarea class="form-input form-textarea" id="manualBody" placeholder="手順や注意事項を記入..." style="height:120px"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="postManual()">追加する</button>
+      <div class="section-title" style="margin-top:24px">登録済みマニュアル</div>
+      <div id="admin-manual-list"></div>
+    </div>
     <!-- Progress Tab -->
     <div id="admin-progress" style="display:none"></div>
   </div>
@@ -580,6 +695,22 @@ let curPage = 'home'; let pFil = 'all'; let gFil = 'all';
 let pinInput = ''; let pendingApproveId = null; let approveP = 'A'; let approveAssignees = [];
 let addP = 'A'; let addAssignees = [];
 let syncIndicator = null;
+let curDashTab = 'checkin';
+
+// ─── 共通ダッシュボード用データ ───
+let checkIns = {}; // {date: {staffId: {itemId: true}}}
+let news = [];     // [{id, title, body, postedAt, important}]
+let newsRead = {}; // {newsId: {staffId: true}}
+let manuals = [];  // [{id, title, body, category}]
+
+const CHECK_IN_ITEMS = [
+  {id:'ci1', t:'引継ぎノートを確認した'},
+  {id:'ci2', t:'お知らせ(News)を確認した'},
+  {id:'ci3', t:'本日の推し商品を確認した'},
+  {id:'ci4', t:'期限切れ間近商品を確認した'},
+  {id:'ci5', t:'今日のおすすめPOPを確認・設置した'},
+];
+const TODAY = () => new Date().toISOString().split('T')[0];
 
 // ─── クラウド同期 ───
 async function syncFromCloud() {
@@ -600,8 +731,13 @@ async function syncFromCloud() {
   if (data.proposals)   proposals   = Array.isArray(data.proposals)   ? data.proposals   : Object.values(data.proposals).filter(Boolean);
   if (data.customTasks) customTasks = Array.isArray(data.customTasks) ? data.customTasks : Object.values(data.customTasks).filter(Boolean);
   if (data.deletedIds)  deletedIds  = data.deletedIds;
+  if (data.checkIns)    checkIns    = data.checkIns;
+  if (data.news)        news        = Array.isArray(data.news)    ? data.news    : Object.values(data.news).filter(Boolean);
+  if (data.newsRead)    newsRead    = data.newsRead;
+  if (data.manuals)     manuals     = Array.isArray(data.manuals) ? data.manuals : Object.values(data.manuals).filter(Boolean);
   save();
   if (curPage) render(curPage);
+  if (curDashTab) renderDashTab(curDashTab);
   showSyncStatus('ok');
 }
 
@@ -611,11 +747,10 @@ async function pushMyDone() {
   await fbSet(`staffDone/${staff}`, myDone);
 }
 async function pushShared() {
-  await fbPatch('', {
-    proposals,
-    customTasks,
-    deletedIds
-  });
+  await fbPatch('', { proposals, customTasks, deletedIds, news, newsRead, manuals });
+}
+async function pushCheckIn(sid) {
+  await fbSet(`checkIns/${TODAY()}/${sid}`, checkIns[TODAY()]?.[sid] || {});
 }
 
 function showSyncStatus(state) {
@@ -625,8 +760,8 @@ function showSyncStatus(state) {
   el.style.background = state === 'syncing' ? '#f59e0b' : state === 'ok' ? '#22c55e' : '#ef4444';
 }
 
-// 30秒ごとに自動同期
-setInterval(() => { if(staff) syncFromCloud(); }, 30000);
+// 30秒ごとに自動同期（ダッシュボードも更新）
+setInterval(() => syncFromCloud(), 30000);
 
 // ═══════════════════════════════ TASK HELPERS ═══════════════════════════════
 function getAllTasks() {
@@ -869,13 +1004,15 @@ function openAdmin() {
 }
 function closeOverlay(id){document.getElementById(id).style.display='none';}
 function switchAdminTab(tab){
-  ['proposals','add','tasks','progress'].forEach(t=>{
+  ['proposals','add','tasks','news','manual','progress'].forEach(t=>{
     document.getElementById('admin-'+t).style.display=t===tab?'block':'none';
     document.getElementById('atab-'+t).classList.toggle('on',t===tab);
   });
   if(tab==='proposals') renderAdminProposals();
   if(tab==='tasks')     renderAdminTasks();
   if(tab==='add')       renderAddAssignees();
+  if(tab==='news')      renderAdminNewsList();
+  if(tab==='manual')    renderAdminManualList();
   if(tab==='progress')  renderAdminProgress();
 }
 
@@ -1053,6 +1190,207 @@ function renderAdminProgress(){
   `;
 }
 
+// ═══════════════════════════════ DASHBOARD ═══════════════════════════════
+function openDash() {
+  document.getElementById('staffScreen').style.display = 'none';
+  const ds = document.getElementById('dashScreen');
+  ds.style.display = 'flex';
+  const d = new Date();
+  document.getElementById('dashDate').textContent =
+    `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${'日月火水木金土'[d.getDay()]}）`;
+  syncFromCloud();
+  switchDashTab('checkin');
+}
+function exitDash() {
+  document.getElementById('dashScreen').style.display = 'none';
+  document.getElementById('staffScreen').style.display = 'flex';
+}
+function openStaffScreen() {
+  document.getElementById('dashScreen').style.display = 'none';
+  document.getElementById('staffScreen').style.display = 'flex';
+}
+function switchDashTab(tab) {
+  curDashTab = tab;
+  ['checkin','news','manual'].forEach(t => {
+    document.getElementById('dash-'+t).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('dtab-'+t).classList.toggle('on', t === tab);
+  });
+  renderDashTab(tab);
+}
+function renderDashTab(tab) {
+  if (tab === 'checkin') renderCheckIn();
+  if (tab === 'news')    renderDashNews();
+  if (tab === 'manual')  renderDashManual();
+}
+
+// ─── 入店チェック ───
+function renderCheckIn() {
+  const today = TODAY();
+  const cards = STAFF.map((s, idx) => {
+    const myChecks = checkIns[today]?.[s.id] || {};
+    const done_cnt = CHECK_IN_ITEMS.filter(ci => myChecks[ci.id]).length;
+    const allDone = done_cnt === CHECK_IN_ITEMS.length;
+    const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+    return `<div class="ci-staff-card ${allDone?'all-done':''}" onclick="openCiDetail('${s.id}','${s.name}')">
+      <span class="ci-check-icon">${allDone ? '✅' : '⬜'}</span>
+      <div class="ci-staff-name" style="color:${color}">${s.name}</div>
+      <div class="ci-staff-role">${s.role}</div>
+      <div class="ci-progress">${done_cnt} / ${CHECK_IN_ITEMS.length} 完了</div>
+      <div class="pbar" style="margin-top:6px"><div class="pfill" style="width:${Math.round(done_cnt/CHECK_IN_ITEMS.length*100)}%"></div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('dash-checkin').innerHTML =
+    `<p style="font-size:13px;color:var(--sub);margin-bottom:14px">名前をタップしてチェックを入れてください</p>
+     <div class="ci-staff-grid">${cards}</div>`;
+}
+function openCiDetail(sid, sname) {
+  const today = TODAY();
+  const myChecks = checkIns[today]?.[sid] || {};
+  document.getElementById('ciOverlayTitle').textContent = `${sname}さんの入店チェック`;
+  document.getElementById('ciOverlayBody').innerHTML =
+    `<p style="font-size:13px;color:var(--sub);margin-bottom:16px">${new Date().toLocaleDateString('ja-JP')}</p>` +
+    CHECK_IN_ITEMS.map(ci => {
+      const checked = !!myChecks[ci.id];
+      return `<div class="titem ${checked?'done':''}" onclick="toggleCheckIn('${sid}','${ci.id}')">
+        <div class="tcheck"></div>
+        <div class="tcontent"><div class="ttitle">${ci.t}</div></div>
+      </div>`;
+    }).join('') +
+    `<div style="margin-top:24px"><button class="btn btn-primary" onclick="closeOverlay('ciOverlay');renderCheckIn()">閉じる</button></div>`;
+  document.getElementById('ciOverlay').style.display = 'flex';
+}
+async function toggleCheckIn(sid, itemId) {
+  const today = TODAY();
+  if (!checkIns[today]) checkIns[today] = {};
+  if (!checkIns[today][sid]) checkIns[today][sid] = {};
+  const cur = checkIns[today][sid][itemId];
+  if (cur) delete checkIns[today][sid][itemId];
+  else checkIns[today][sid][itemId] = true;
+  openCiDetail(sid, STAFF.find(s=>s.id===sid)?.name||sid);
+  await pushCheckIn(sid);
+}
+
+// ─── お知らせ（ダッシュボード表示） ───
+function renderDashNews() {
+  if (!news.length) {
+    document.getElementById('dash-news').innerHTML =
+      `<div class="empty"><div class="empty-ico">📭</div><div>お知らせはまだありません</div></div>`;
+    return;
+  }
+  const sorted = [...news].sort((a,b) => (b.important?1:0)-(a.important?1:0) || b.id-a.id);
+  document.getElementById('dash-news').innerHTML = sorted.map(n => {
+    const readers = STAFF.map(s => {
+      const isRead = newsRead[n.id]?.[s.id];
+      return `<span class="reader-chip ${isRead?'read':'unread'}" onclick="markNewsRead(${n.id},'${s.id}')">${s.name}</span>`;
+    }).join('');
+    return `<div class="news-card ${n.important?'important':''}">
+      ${n.important?'<div style="font-size:11px;color:var(--pa);font-weight:700;margin-bottom:4px">⚠️ 重要</div>':''}
+      <div class="news-title">${n.title}</div>
+      <div class="news-meta">${n.postedAt}</div>
+      <div class="news-body">${n.body}</div>
+      <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">既読確認（タップで既読）</div>
+      <div class="news-readers">${readers}</div>
+    </div>`;
+  }).join('');
+}
+async function markNewsRead(newsId, sid) {
+  if (!newsRead[newsId]) newsRead[newsId] = {};
+  if (newsRead[newsId][sid]) delete newsRead[newsId][sid];
+  else newsRead[newsId][sid] = true;
+  await fbSet(`newsRead/${newsId}`, newsRead[newsId]);
+  newsRead[newsId] = await fbGet(`newsRead/${newsId}`) || newsRead[newsId];
+  renderDashNews();
+}
+
+// ─── マニュアル（ダッシュボード表示） ───
+function renderDashManual() {
+  if (!manuals.length) {
+    document.getElementById('dash-manual').innerHTML =
+      `<div class="empty"><div class="empty-ico">📖</div><div>マニュアルはまだありません</div></div>`;
+    return;
+  }
+  const sorted = [...manuals].sort((a,b) => (a.order||0)-(b.order||0));
+  document.getElementById('dash-manual').innerHTML = sorted.map(m =>
+    `<div class="manual-card">
+      <div class="manual-header" onclick="toggleManual(${m.id})">
+        <div>
+          ${m.category?`<div class="manual-cat">${m.category}</div>`:''}
+          <div class="manual-title">${m.title}</div>
+        </div>
+        <span class="manual-chevron" id="mchev-${m.id}">▼</span>
+      </div>
+      <div class="manual-body" id="mbody-${m.id}">${m.body}</div>
+    </div>`
+  ).join('');
+}
+function toggleManual(id) {
+  const body = document.getElementById('mbody-'+id);
+  const chev = document.getElementById('mchev-'+id);
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+
+// ─── 管理者：お知らせ投稿 ───
+function postNews() {
+  const title = document.getElementById('newsTitle').value.trim();
+  const body  = document.getElementById('newsBody').value.trim();
+  if (!title || !body) { toast('タイトルと内容を入力してください'); return; }
+  const important = document.getElementById('newsImportant').checked;
+  const item = { id: Date.now(), title, body, important, postedAt: new Date().toLocaleDateString('ja-JP') };
+  news.unshift(item);
+  document.getElementById('newsTitle').value = '';
+  document.getElementById('newsBody').value = '';
+  document.getElementById('newsImportant').checked = false;
+  pushShared(); renderAdminNewsList();
+  toast('お知らせを投稿しました 📣');
+}
+function renderAdminNewsList() {
+  document.getElementById('admin-news-list').innerHTML = news.length
+    ? news.map(n => `<div class="prop-card" style="border-left-color:${n.important?'var(--pa)':'var(--accent)'}">
+        <div class="prop-title">${n.important?'⚠️ ':''} ${n.title}</div>
+        <div class="prop-meta">${n.postedAt}</div>
+        <button class="btn btn-danger btn-sm" onclick="deleteNews(${n.id})">削除</button>
+      </div>`).join('')
+    : '<div style="color:var(--sub);font-size:13px">投稿済みのお知らせはありません</div>';
+}
+function deleteNews(id) {
+  if (confirm('このお知らせを削除しますか？')) {
+    news = news.filter(n => n.id !== id);
+    delete newsRead[id];
+    pushShared(); renderAdminNewsList(); toast('削除しました');
+  }
+}
+
+// ─── 管理者：マニュアル追加 ───
+function postManual() {
+  const title = document.getElementById('manualTitle').value.trim();
+  const body  = document.getElementById('manualBody').value.trim();
+  if (!title || !body) { toast('タイトルと内容を入力してください'); return; }
+  const category = document.getElementById('manualCat').value.trim();
+  const item = { id: Date.now(), title, body, category, order: manuals.length };
+  manuals.push(item);
+  document.getElementById('manualTitle').value = '';
+  document.getElementById('manualBody').value = '';
+  document.getElementById('manualCat').value = '';
+  pushShared(); renderAdminManualList();
+  toast('マニュアルを追加しました 📖');
+}
+function renderAdminManualList() {
+  document.getElementById('admin-manual-list').innerHTML = manuals.length
+    ? manuals.map(m => `<div class="prop-card" style="border-left-color:#8b5cf6">
+        <div class="prop-title">${m.title}</div>
+        ${m.category?`<div class="prop-meta">${m.category}</div>`:''}
+        <button class="btn btn-danger btn-sm" onclick="deleteManual(${m.id})">削除</button>
+      </div>`).join('')
+    : '<div style="color:var(--sub);font-size:13px">登録済みのマニュアルはありません</div>';
+}
+function deleteManual(id) {
+  if (confirm('このマニュアルを削除しますか？')) {
+    manuals = manuals.filter(m => m.id !== id);
+    pushShared(); renderAdminManualList(); toast('削除しました');
+  }
+}
+
 // ═══════════════════════════════ UTILS ═══════════════════════════════
 function updatePendingBadge(){
   const cnt=proposals.filter(p=>p.status==='pending').length;
@@ -1067,7 +1405,8 @@ function toast(msg){
 
 // ═══════════════════════════════ INIT ═══════════════════════════════
 initStaff();
-if(staff){const s=STAFF.find(x=>x.id===staff);if(s)pickStaff(s.id,s.name);}
+// 起動時はダッシュボードを表示（iPadの共通画面）
+openDash();
 </script>
 </body>
 </html>
