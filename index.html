@@ -703,12 +703,31 @@ let news = [];     // [{id, title, body, postedAt, important}]
 let newsRead = {}; // {newsId: {staffId: true}}
 let manuals = [];  // [{id, title, body, category}]
 
-const CHECK_IN_ITEMS = [
-  {id:'ci1', t:'引継ぎノートを確認した'},
-  {id:'ci2', t:'お知らせ(News)を確認した'},
-  {id:'ci3', t:'本日の推し商品を確認した'},
-  {id:'ci4', t:'期限切れ間近商品を確認した'},
-  {id:'ci5', t:'今日のおすすめPOPを確認・設置した'},
+const OPEN_ITEMS = [
+  {id:'o1',  t:'勤怠打刻（タイムカードアプリで出勤）'},
+  {id:'o2',  t:'スマレジ同期（更新ボタン→店舗・商品をタッチ）'},
+  {id:'o3',  t:'照明点灯（店内・表ディスプレイ・ドリンクケース）'},
+  {id:'o4',  t:'空調起動・空気清浄機電源ON'},
+  {id:'o5',  t:'立て看板を店外に出す（雨天時は出さない）'},
+  {id:'o6',  t:'BGM・映像（テレビ→YouTubeで音楽。ドラゴンシーシャPVも適宜）'},
+  {id:'o7',  t:'レジ金の準備（金庫から取り出し）'},
+  {id:'o8',  t:'金額確認：レジ準備金 15,000円 ／ 両替金 100,000円'},
+  {id:'o9',  t:'日報送信（LINEグループ「オープン報告」）'},
+  {id:'o10', t:'エルメ確認（未返信メッセージに対応）'},
+  {id:'o11', t:'電話確認（着信履歴チェック・未対応は折り返し）'},
+  {id:'o12', t:'在庫確認：タチオン・グルタチオン・シーシャ・ナイトハニー・二日酔いセット'},
+];
+const CLOSE_ITEMS = [
+  {id:'c1', t:'精算操作（スマレジ下部中央の「精算」ボタン）'},
+  {id:'c2', t:'金額入力（現金を数えてスマレジ画面に入力）'},
+  {id:'c3', t:'翌日レジ金の準備（15,000円を残す）'},
+  {id:'c4', t:'売上回収（封筒に現金・精算レシートを入れ、日付・金額・氏名を記入して封をする）'},
+  {id:'c5', t:'日報作成（LINEグループへ送信）'},
+  {id:'c6', t:'ヒアリング内容の記載（お客様から聞いた情報を必ず記載）'},
+  {id:'c7', t:'電気消灯（全照明オフ）'},
+  {id:'c8', t:'空調オフ確認'},
+  {id:'c9', t:'施錠（入口扉）'},
+  {id:'c10', t:'カギをキーボックスに戻す（暗証番号：0826）'},
 ];
 const TODAY = () => new Date().toISOString().split('T')[0];
 
@@ -1223,35 +1242,45 @@ function renderDashTab(tab) {
   if (tab === 'manual')  renderDashManual();
 }
 
-// ─── 入店チェック ───
+// ─── 開店・閉店チェック ───
 function renderCheckIn() {
   const today = TODAY();
-  const cards = STAFF.map((s, idx) => {
-    const myChecks = checkIns[today]?.[s.id] || {};
-    const done_cnt = CHECK_IN_ITEMS.filter(ci => myChecks[ci.id]).length;
-    const allDone = done_cnt === CHECK_IN_ITEMS.length;
-    const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
-    return `<div class="ci-staff-card ${allDone?'all-done':''}" onclick="openCiDetail('${s.id}','${s.name}')">
-      <span class="ci-check-icon">${allDone ? '✅' : '⬜'}</span>
-      <div class="ci-staff-name" style="color:${color}">${s.name}</div>
-      <div class="ci-staff-role">${s.role}</div>
-      <div class="ci-progress">${done_cnt} / ${CHECK_IN_ITEMS.length} 完了</div>
-      <div class="pbar" style="margin-top:6px"><div class="pfill" style="width:${Math.round(done_cnt/CHECK_IN_ITEMS.length*100)}%"></div></div>
-    </div>`;
-  }).join('');
-  document.getElementById('dash-checkin').innerHTML =
-    `<p style="font-size:13px;color:var(--sub);margin-bottom:14px">名前をタップしてチェックを入れてください</p>
-     <div class="ci-staff-grid">${cards}</div>`;
+  const ci = checkIns[today] || {};
+  const openDone  = OPEN_ITEMS.filter(x => ci.open?.[x.id]).length;
+  const closeDone = CLOSE_ITEMS.filter(x => ci.close?.[x.id]).length;
+  const openPct   = Math.round(openDone  / OPEN_ITEMS.length  * 100);
+  const closePct  = Math.round(closeDone / CLOSE_ITEMS.length * 100);
+
+  document.getElementById('dash-checkin').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+      <div class="ci-staff-card ${openDone===OPEN_ITEMS.length?'all-done':''}" onclick="openCiDetail('open')">
+        <div class="ci-check-icon">${openDone===OPEN_ITEMS.length?'✅':'🌅'}</div>
+        <div class="ci-staff-name" style="color:#f59e0b">開店業務</div>
+        <div class="ci-progress">${openDone} / ${OPEN_ITEMS.length} 完了</div>
+        <div class="pbar" style="margin-top:6px"><div class="pfill" style="width:${openPct}%;background:#f59e0b"></div></div>
+      </div>
+      <div class="ci-staff-card ${closeDone===CLOSE_ITEMS.length?'all-done':''}" onclick="openCiDetail('close')">
+        <div class="ci-check-icon">${closeDone===CLOSE_ITEMS.length?'✅':'🌙'}</div>
+        <div class="ci-staff-name" style="color:#6366f1">閉店業務</div>
+        <div class="ci-progress">${closeDone} / ${CLOSE_ITEMS.length} 完了</div>
+        <div class="pbar" style="margin-top:6px"><div class="pfill" style="width:${closePct}%;background:#6366f1"></div></div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--sub);text-align:center">タップして各業務のチェックリストを開く</p>
+  `;
 }
-function openCiDetail(sid, sname) {
+
+function openCiDetail(type) {
   const today = TODAY();
-  const myChecks = checkIns[today]?.[sid] || {};
-  document.getElementById('ciOverlayTitle').textContent = `${sname}さんの入店チェック`;
+  const items = type === 'open' ? OPEN_ITEMS : CLOSE_ITEMS;
+  const label = type === 'open' ? '🌅 開店業務チェックリスト' : '🌙 閉店業務チェックリスト';
+  const checks = checkIns[today]?.[type] || {};
+  document.getElementById('ciOverlayTitle').textContent = label;
   document.getElementById('ciOverlayBody').innerHTML =
     `<p style="font-size:13px;color:var(--sub);margin-bottom:16px">${new Date().toLocaleDateString('ja-JP')}</p>` +
-    CHECK_IN_ITEMS.map(ci => {
-      const checked = !!myChecks[ci.id];
-      return `<div class="titem ${checked?'done':''}" onclick="toggleCheckIn('${sid}','${ci.id}')">
+    items.map(ci => {
+      const checked = !!checks[ci.id];
+      return `<div class="titem ${checked?'done':''}" onclick="toggleCheckIn('${type}','${ci.id}')">
         <div class="tcheck"></div>
         <div class="tcontent"><div class="ttitle">${ci.t}</div></div>
       </div>`;
@@ -1259,15 +1288,15 @@ function openCiDetail(sid, sname) {
     `<div style="margin-top:24px"><button class="btn btn-primary" onclick="closeOverlay('ciOverlay');renderCheckIn()">閉じる</button></div>`;
   document.getElementById('ciOverlay').style.display = 'flex';
 }
-async function toggleCheckIn(sid, itemId) {
+
+async function toggleCheckIn(type, itemId) {
   const today = TODAY();
   if (!checkIns[today]) checkIns[today] = {};
-  if (!checkIns[today][sid]) checkIns[today][sid] = {};
-  const cur = checkIns[today][sid][itemId];
-  if (cur) delete checkIns[today][sid][itemId];
-  else checkIns[today][sid][itemId] = true;
-  openCiDetail(sid, STAFF.find(s=>s.id===sid)?.name||sid);
-  await pushCheckIn(sid);
+  if (!checkIns[today][type]) checkIns[today][type] = {};
+  if (checkIns[today][type][itemId]) delete checkIns[today][type][itemId];
+  else checkIns[today][type][itemId] = true;
+  openCiDetail(type);
+  await fbSet(`checkIns/${today}/${type}`, checkIns[today][type]);
 }
 
 // ─── お知らせ（ダッシュボード表示） ───
