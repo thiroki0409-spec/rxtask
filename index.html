@@ -258,10 +258,10 @@
   </div>
 </div>
 
-<!-- ═══ CHECK-IN DETAIL OVERLAY ═══ -->
-<div class="overlay" id="ciOverlay" style="z-index:600">
-  <div class="overlay-header">
-    <button class="back-btn" onclick="closeOverlay('ciOverlay')">✕</button>
+<!-- ═══ CHECK-IN DETAIL SCREEN ═══ -->
+<div id="ciScreen" style="display:none;position:fixed;inset:0;z-index:900;background:var(--bg);flex-direction:column;overflow-y:auto;">
+  <div class="overlay-header" style="position:sticky;top:0;z-index:10">
+    <button class="back-btn" onclick="closeCiOverlay()">✕</button>
     <h2 id="ciOverlayTitle">入店チェック</h2>
   </div>
   <div class="overlay-body" id="ciOverlayBody"></div>
@@ -1321,12 +1321,10 @@ function openCiDetail(type) {
       </div>`;
     }).join('') +
     `<div style="margin-top:24px"><button class="btn btn-primary" onclick="closeCiOverlay()">閉じる</button></div>`;
-  document.getElementById('dashScreen').style.display = 'none';
-  document.getElementById('ciOverlay').style.display = 'flex';
+  document.getElementById('ciScreen').style.display = 'flex';
 }
 function closeCiOverlay() {
-  document.getElementById('ciOverlay').style.display = 'none';
-  document.getElementById('dashScreen').style.display = 'flex';
+  document.getElementById('ciScreen').style.display = 'none';
   renderCheckIn();
 }
 
